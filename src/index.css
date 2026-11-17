@@ -1,0 +1,685 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  color-scheme: light;
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* iOS 26 Liquid Glass Light Palette */
+  --bg-mesh:
+    radial-gradient(at 8% 4%, rgba(210, 224, 255, 0.82) 0px, transparent 48%),
+    radial-gradient(at 92% 6%, rgba(255, 214, 226, 0.72) 0px, transparent 46%),
+    radial-gradient(at 85% 92%, rgba(226, 214, 255, 0.72) 0px, transparent 50%),
+    radial-gradient(at 10% 88%, rgba(206, 242, 255, 0.76) 0px, transparent 48%),
+    #f2f2f7;
+
+  --surface: rgba(255, 255, 255, 0.64);
+  --surface-elevated: rgba(255, 255, 255, 0.84);
+  --surface-chrome: rgba(255, 255, 255, 0.68);
+  --surface-card: rgba(255, 255, 255, 0.78);
+  --surface-recessed: rgba(118, 118, 128, 0.09);
+  --surface-recessed-hover: rgba(118, 118, 128, 0.14);
+
+  --glass-border: rgba(255, 255, 255, 0.84);
+  --glass-border-subtle: rgba(15, 23, 42, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.94);
+  --glass-rim-bottom: rgba(15, 23, 42, 0.05);
+
+  --text: #1c1c1e;
+  --text-secondary: #48484a;
+  --muted: #6e6e73;
+  --border: rgba(60, 60, 67, 0.12);
+
+  /* LBMM Signature Crimson + iOS System Semantics */
+  --primary: #ff3b30;
+  --primary-hover: #e02d23;
+  --primary-gradient: linear-gradient(145deg, #ff453a 0%, #e62229 100%);
+  --accent-soft: rgba(255, 59, 48, 0.12);
+  --accent-border: rgba(255, 59, 48, 0.28);
+
+  --success: #248a3d;
+  --success-bright: #34c759;
+  --success-soft: rgba(52, 199, 89, 0.15);
+  --warning: #b25000;
+  --warning-bright: #ff9500;
+  --warning-soft: rgba(255, 149, 0, 0.15);
+  --danger: #d70015;
+  --info: #007aff;
+  --info-soft: rgba(0, 122, 255, 0.13);
+
+  --chart-revenue: #ff3b30;
+  --chart-profit: #34c759;
+  --chart-info: #007aff;
+  --chart-grid: rgba(60, 60, 67, 0.09);
+
+  --shadow-glass:
+    0 12px 36px -8px rgba(15, 23, 42, 0.09),
+    0 2px 8px -2px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0.5px var(--glass-highlight),
+    inset 0 -0.5px 0 var(--glass-rim-bottom);
+  --shadow-sm:
+    0 4px 14px -2px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --shadow-md:
+    0 20px 50px -12px rgba(15, 23, 42, 0.16),
+    inset 0 1px 1px rgba(255, 255, 255, 0.92);
+
+  --blur-chrome: blur(28px) saturate(185%);
+  --blur-modal: blur(36px) saturate(195%);
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-ios: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root[data-theme="dark"],
+:root.dark {
+  color-scheme: dark;
+  --bg-mesh:
+    radial-gradient(at 8% 5%, rgba(78, 22, 34, 0.72) 0px, transparent 52%),
+    radial-gradient(at 92% 8%, rgba(20, 44, 78, 0.74) 0px, transparent 52%),
+    radial-gradient(at 60% 95%, rgba(44, 18, 62, 0.68) 0px, transparent 54%),
+    #060609;
+
+  --surface: rgba(28, 28, 34, 0.64);
+  --surface-elevated: rgba(42, 42, 50, 0.82);
+  --surface-chrome: rgba(28, 28, 34, 0.74);
+  --surface-card: rgba(38, 38, 46, 0.72);
+  --surface-recessed: rgba(120, 120, 128, 0.2);
+  --surface-recessed-hover: rgba(120, 120, 128, 0.28);
+
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-border-subtle: rgba(255, 255, 255, 0.09);
+  --glass-highlight: rgba(255, 255, 255, 0.2);
+  --glass-rim-bottom: rgba(0, 0, 0, 0.32);
+
+  --text: #f5f5f7;
+  --text-secondary: #d1d1d6;
+  --muted: #98989f;
+  --border: rgba(255, 255, 255, 0.11);
+
+  --primary: #ff453a;
+  --primary-hover: #ff6961;
+  --primary-gradient: linear-gradient(145deg, #ff5449 0%, #e02d24 100%);
+  --accent-soft: rgba(255, 69, 58, 0.2);
+  --accent-border: rgba(255, 69, 58, 0.36);
+
+  --success: #30d158;
+  --success-bright: #30d158;
+  --success-soft: rgba(48, 209, 88, 0.18);
+  --warning: #ffd60a;
+  --warning-bright: #ffd60a;
+  --warning-soft: rgba(255, 214, 10, 0.18);
+  --danger: #ff6961;
+  --info: #0a84ff;
+  --info-soft: rgba(10, 132, 255, 0.2);
+
+  --chart-revenue: #ff453a;
+  --chart-profit: #30d158;
+  --chart-info: #0a84ff;
+  --chart-grid: rgba(255, 255, 255, 0.09);
+
+  --shadow-glass:
+    0 14px 40px -8px rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0.5px var(--glass-highlight),
+    inset 0 -0.5px 0 var(--glass-rim-bottom);
+  --shadow-sm:
+    0 4px 16px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --shadow-md:
+    0 24px 60px rgba(0, 0, 0, 0.65),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  font-family: var(--font-ui);
+  font-size: clamp(14px, 0.25vw + 13.5px, 15px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  letter-spacing: -0.011em;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg-mesh);
+  background-attachment: fixed;
+  color: var(--text);
+  line-height: 1.5;
+  overflow-x: clip;
+  -webkit-overflow-scrolling: touch;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button,
+summary,
+select {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.tabular-nums {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.font-mono-code {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.025em;
+}
+
+/* Adaptive LBMM Logo Filter (Preserves Crimson M while adapting white text in light mode) */
+.brand-logo {
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: transparent !important;
+  transition: filter 0.25s ease;
+}
+
+[data-theme="light"] .brand-logo,
+[data-theme="light"] .receipt-logo {
+  filter: url(#lbmm-logo-light);
+}
+
+[data-theme="dark"] .brand-logo,
+[data-theme="dark"] .receipt-logo {
+  filter: url(#lbmm-logo-dark);
+}
+
+@layer components {
+/* Liquid Glass Surface Primitives */
+.glass-chrome {
+  background: var(--surface-chrome);
+  backdrop-filter: var(--blur-chrome);
+  -webkit-backdrop-filter: var(--blur-chrome);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-card {
+  background: var(--surface-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+  contain: layout style;
+  transition: transform 0.2s var(--ease-ios), border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .glass-card-interactive:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-glass);
+  }
+}
+
+.glass-card-interactive:active {
+  transform: scale(0.985);
+}
+
+/* Buttons */
+.ios-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 16px;
+  border-radius: 13px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid var(--glass-border);
+  background: var(--surface-elevated);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.16s var(--ease-ios), opacity 0.16s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ios-btn:active:not(:disabled) {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.ios-btn:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.ios-btn-primary {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 6px 18px -4px rgba(255, 59, 48, 0.42),
+    inset 0 1px 1px rgba(255, 255, 255, 0.38);
+}
+
+.ios-btn-primary:hover:not(:disabled) {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.ios-btn-secondary {
+  background: var(--surface-card);
+  border-color: var(--glass-border);
+}
+
+.ios-btn-secondary:hover:not(:disabled) {
+  background: var(--surface-elevated);
+}
+
+.ios-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--muted);
+}
+
+.ios-btn-ghost:hover:not(:disabled) {
+  background: var(--surface-recessed);
+  color: var(--text);
+}
+
+.ios-icon-btn {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 13px;
+  border: 1px solid var(--glass-border);
+  background: var(--surface-card);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.16s var(--ease-ios), background-color 0.18s ease;
+}
+
+.ios-icon-btn:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.ios-icon-btn:hover:not(:disabled) {
+  background: var(--surface-elevated);
+}
+
+/* iOS Form Inputs */
+.ios-input,
+.ios-select,
+.ios-textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 13px;
+  border: 1px solid var(--glass-border-subtle);
+  background: var(--surface-recessed);
+  color: var(--text);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ios-input-icon {
+  padding-left: 2.5rem;
+}
+
+.ios-input:focus,
+.ios-select:focus,
+.ios-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--surface-elevated);
+  box-shadow: 0 0 0 3.5px var(--accent-soft);
+}
+
+.ios-input::placeholder,
+.ios-textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.ios-input:read-only {
+  opacity: 0.78;
+}
+
+/* iOS Segmented Control */
+.ios-segmented {
+  position: relative;
+  display: grid;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--surface-recessed);
+  border: 1px solid var(--glass-border-subtle);
+  isolation: isolate;
+}
+
+.ios-segmented-thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  border-radius: 10px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+  z-index: -1;
+  transition: transform 0.24s var(--ease-spring);
+}
+
+.ios-segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.18s ease, transform 0.15s ease;
+}
+
+.ios-segmented button[aria-pressed="true"] {
+  color: var(--primary);
+}
+
+.ios-segmented button:active {
+  transform: scale(0.95);
+}
+
+/* iOS Theme Switch */
+.ios-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+}
+
+.ios-switch-track {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--surface-recessed);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: background-color 0.25s ease;
+}
+
+.ios-switch-thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
+  transition: transform 0.26s var(--ease-spring);
+}
+
+[data-theme="dark"] .ios-switch-track {
+  background: var(--primary);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+[data-theme="dark"] .ios-switch-thumb {
+  transform: translateX(18px);
+}
+
+/* Semantic Status Indicators (Never hue-only) */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.status-chip.success {
+  color: var(--success);
+  background: var(--success-soft);
+  border-color: rgba(52, 199, 89, 0.26);
+}
+
+.status-chip.warning {
+  color: var(--warning);
+  background: var(--warning-soft);
+  border-color: rgba(255, 149, 0, 0.28);
+}
+
+.status-chip.danger {
+  color: var(--danger);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.status-chip.neutral {
+  color: var(--muted);
+  background: var(--surface-recessed);
+  border-color: var(--glass-border-subtle);
+}
+
+/* Page & Card Enter Animation (Compositor-only) */
+@keyframes ios-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ios-enter {
+  animation: ios-enter 0.26s var(--ease-spring) both;
+}
+}
+
+/* Responsive Data Table -> Mobile Glass Cards */
+.glass-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--surface-card);
+}
+
+.glass-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+}
+
+.glass-table th {
+  text-align: left;
+  padding: 11px 14px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--surface-recessed);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.glass-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.glass-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.glass-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .glass-table tbody tr:hover {
+    background: var(--surface-recessed);
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Responsive Overrides: Mobile <= 767px */
+@media (max-width: 767px) {
+  body,
+  .login-bg {
+    background-attachment: scroll;
+  }
+
+  .ios-input,
+  .ios-select,
+  .ios-textarea {
+    font-size: 16px !important;
+    min-height: 46px;
+  }
+
+  .responsive-table thead {
+    display: none;
+  }
+  .responsive-table,
+  .responsive-table tbody,
+  .responsive-table tr,
+  .responsive-table td {
+    display: block;
+    width: 100%;
+  }
+  .responsive-table tr {
+    background: var(--surface-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+  .responsive-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+  }
+  .responsive-table td:last-child {
+    border-bottom: 0;
+  }
+  .responsive-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 80mm Thermal Receipt Print Layout */
+@media print {
+  @page {
+    size: 80mm 280mm;
+    margin: 0;
+  }
+  html,
+  body {
+    width: 80mm !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  body > *:not(#receipt-print-portal) {
+    display: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  #struk-area {
+    width: 100% !important;
+    padding: 4mm !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 9pt !important;
+    border-radius: 0 !important;
+  }
+  #struk-area .receipt-logo {
+    filter: url(#lbmm-logo-light) !important;
+  }
+}

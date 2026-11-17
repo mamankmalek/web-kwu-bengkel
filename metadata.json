@@ -1,0 +1,6 @@
+{
+  "name": "LBMM | Service 2026/2027",
+  "description": "Sistem administrasi, pelayanan servis, kasir, dan inventaris Lembaga Bengkel Mahasiswa Mesin FT-IRS ITS.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
