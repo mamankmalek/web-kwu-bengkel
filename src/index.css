@@ -210,6 +210,10 @@ select {
   filter: url(#lbmm-logo-dark);
 }
 
+#struk-area .receipt-logo {
+  filter: url(#lbmm-logo-light);
+}
+
 @layer components {
 /* Liquid Glass Surface Primitives */
 .glass-chrome {

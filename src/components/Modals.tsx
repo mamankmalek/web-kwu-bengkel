@@ -31,10 +31,11 @@ import { compressImage, readEvidenceFile } from '../utils/image';
 import {
   prepareReceiptExport,
   PreparedReceipt,
+  RECEIPT_EXPORT_LOGO_DATA_URL,
   triggerFileDownload,
 } from '../utils/receiptExport';
 import { clearFormRequest, getOrCreateFormRequest } from '../utils/storage';
-import { IosModal, LBMM_LOGO_URL } from './LiquidPrimitives';
+import { IosModal } from './LiquidPrimitives';
 
 const PRODUCT_CATEGORIES = ['Oli', 'Sparepart', 'Jasa Servis'];
 const PURCHASE_STAFF = ['Dila', 'Kira', 'Mamad', 'Febri', 'Akmal', 'Radhit', 'Vanza', 'Meuthia', 'Kevin', 'Jawahir'];
@@ -1086,11 +1087,11 @@ export function ReceiptModal({
         >
           <div className="text-center space-y-0.5 pb-2 border-b border-dashed border-neutral-400">
             <img
-              src={LBMM_LOGO_URL}
+              src={RECEIPT_EXPORT_LOGO_DATA_URL}
               alt="Logo LBMM"
-              referrerPolicy="no-referrer"
-              className="receipt-logo h-8 mx-auto mb-1 object-contain"
-              style={{ filter: 'url(#lbmm-logo-light)' }}
+              width={148}
+              height={50}
+              className="receipt-logo w-[148px] h-auto mx-auto mb-1.5 object-contain"
             />
             <div className="font-bold text-sm">{profile.nama || 'LBMM FT-IRS ITS'}</div>
             {profile.alamat && <div className="text-[11px] text-neutral-600">{profile.alamat}</div>}
