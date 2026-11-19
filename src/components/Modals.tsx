@@ -372,7 +372,7 @@ export function ProductModal({
 
         <div className="space-y-1">
           <label htmlFor="prod-gambar" className="text-xs font-semibold text-[var(--muted)]">
-            Tautan gambar (Google Drive / HTTPS, opsional)
+            URL gambar (opsional)
           </label>
           <input
             id="prod-gambar"
@@ -728,7 +728,7 @@ export function PurchaseModal({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-[var(--muted)]">
-            <span className="font-semibold">Foto nota pembelian (opsional)</span>
+            <span className="font-semibold">Foto nota (opsional)</span>
             {receiptPhoto && (
               <button
                 type="button"
@@ -839,7 +839,7 @@ export function ExpenseModal({
   };
 
   return (
-    <IosModal open={open} onClose={onClose} title="Catat pengeluaran operasional">
+    <IosModal open={open} onClose={onClose} title="Catat pengeluaran">
       <form onSubmit={handleSubmit} className="space-y-3.5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
@@ -899,7 +899,7 @@ export function ExpenseModal({
             id="exp-note"
             type="text"
             className="ios-input"
-            placeholder="Beli lap majun, token listrik, dll"
+            placeholder="Catatan (opsional)"
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />

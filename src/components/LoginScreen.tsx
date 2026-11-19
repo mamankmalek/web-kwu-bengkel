@@ -87,7 +87,7 @@ export function LoginScreen({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 aria-describedby="login-error"
-                placeholder="Masukkan kata sandi bengkel"
+                placeholder="Kata sandi"
                 className="w-full min-h-[46px] px-3.5 bg-transparent border-0 text-[var(--text)] focus:outline-none text-[16px] md:text-[0.94rem]"
               />
               <button

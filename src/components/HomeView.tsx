@@ -42,14 +42,9 @@ export function HomeView({
     <div id="view-home" className="ios-enter space-y-5">
       {/* Page Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-[1.45rem] md:text-[1.75rem] font-extrabold tracking-tight m-0">
-            Ringkasan
-          </h1>
-          <p className="text-xs md:text-sm text-[var(--muted)] m-0 mt-0.5">
-            Operasional bengkel, transaksi harian, dan kondisi stok suku cadang
-          </p>
-        </div>
+        <h1 className="text-[1.45rem] md:text-[1.75rem] font-extrabold tracking-tight m-0">
+          Ringkasan
+        </h1>
         <button
           type="button"
           id="home-refresh"
@@ -72,7 +67,7 @@ export function HomeView({
           <div className="text-xs text-[var(--muted)] mt-1.5 tabular-nums">
             {s
               ? `${formatCount(s.transactions)} transaksi · ${formatCount(s.itemsSold)} item`
-              : 'Memuat ringkasan...'}
+              : '—'}
           </div>
         </article>
 
@@ -85,7 +80,7 @@ export function HomeView({
             {s ? rp(s.grossProfit) : '—'}
           </div>
           <div className="text-xs text-[var(--muted)] mt-1.5 tabular-nums">
-            {s ? `Modal terjual ${rp(s.costOfGoods)}` : 'Menunggu data'}
+            {s ? `Modal terjual ${rp(s.costOfGoods)}` : '—'}
           </div>
         </article>
 
@@ -190,7 +185,7 @@ export function HomeView({
             <div className="flex-1 flex flex-col items-center justify-center py-10 text-center text-sm text-[var(--muted)] rounded-2xl bg-[var(--surface-recessed)]/60">
               <Receipt className="w-8 h-8 mb-2 opacity-50" />
               <p className="m-0 font-medium">
-                {loading ? 'Memuat transaksi...' : 'Belum ada transaksi hari ini.'}
+                {loading ? 'Memuat...' : 'Belum ada transaksi.'}
               </p>
             </div>
           )}
@@ -308,7 +303,7 @@ export function HomeView({
               href="#/inventaris"
               className="ios-btn ios-btn-secondary w-full mt-3 text-xs"
             >
-              <span>Kelola & lihat grafik inventaris</span>
+              <span>Lihat inventaris</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </a>
           </article>
@@ -324,12 +319,7 @@ export function HomeView({
           <span className="w-11 h-11 rounded-2xl bg-[var(--accent-soft)] text-[var(--primary)] flex items-center justify-center shrink-0">
             <Wrench className="w-5 h-5" />
           </span>
-          <div className="min-w-0">
-            <div className="font-bold text-sm">WO Baru</div>
-            <div className="text-xs text-[var(--muted)] truncate">
-              Buat antrean servis motor pelanggan
-            </div>
-          </div>
+          <div className="font-bold text-sm">WO Baru</div>
         </a>
 
         <a
@@ -339,12 +329,7 @@ export function HomeView({
           <span className="w-11 h-11 rounded-2xl bg-[var(--info-soft)] text-[var(--info)] flex items-center justify-center shrink-0">
             <Package className="w-5 h-5" />
           </span>
-          <div className="min-w-0">
-            <div className="font-bold text-sm">Inventaris</div>
-            <div className="text-xs text-[var(--muted)] truncate">
-              Pantau stok, frekuensi pakai & restok
-            </div>
-          </div>
+          <div className="font-bold text-sm">Inventaris</div>
         </a>
 
         <a
@@ -354,12 +339,7 @@ export function HomeView({
           <span className="w-11 h-11 rounded-2xl bg-[var(--success-soft)] text-[var(--success)] flex items-center justify-center shrink-0">
             <BarChart2 className="w-5 h-5" />
           </span>
-          <div className="min-w-0">
-            <div className="font-bold text-sm">Laporan</div>
-            <div className="text-xs text-[var(--muted)] truncate">
-              Omzet, laba kotor, biaya & unduh CSV
-            </div>
-          </div>
+          <div className="font-bold text-sm">Laporan</div>
         </a>
       </section>
     </div>

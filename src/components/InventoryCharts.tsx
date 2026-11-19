@@ -230,7 +230,7 @@ export function InventoryCharts({
         </div>
 
         <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--muted)]">
-          <span>Total fisik: {formatCount(analytics.totalUnits)} unit</span>
+          <span>Total: {formatCount(analytics.totalUnits)} unit</span>
           <span className="tabular-nums font-semibold text-[var(--text)]">
             Modal {rp(analytics.totalModalValue)}
           </span>
@@ -301,12 +301,10 @@ export function InventoryCharts({
                     }}
                   />
                 </div>
-                {(hovered || selected || cat.lowOrEmpty > 0) && (
+                {(cat.lowOrEmpty > 0 || (!isService && (hovered || selected))) && (
                   <div className="flex items-center justify-between text-[0.7rem] text-[var(--muted)] mt-1.5 tabular-nums">
                     <span>
-                      {cat.lowOrEmpty > 0
-                        ? `${cat.lowOrEmpty} SKU perlu restok`
-                        : 'Stok kategori aman'}
+                      {cat.lowOrEmpty > 0 ? `${cat.lowOrEmpty} perlu restok` : ''}
                     </span>
                     {!isService && <span>Nilai jual {rp(cat.retailValue)}</span>}
                   </div>
@@ -317,7 +315,7 @@ export function InventoryCharts({
         </div>
 
         <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--muted)]">
-          <span>Potensi jual stok</span>
+          <span>Potensi jual</span>
           <span className="tabular-nums font-bold text-[var(--success)]">
             {rp(analytics.totalRetailValue)}
           </span>
@@ -334,7 +332,7 @@ export function InventoryCharts({
               <AlertTriangle className="w-4 h-4 text-[var(--warning-bright)]" />
             )}
             <h2 className="text-[0.95rem] font-bold m-0">
-              {usageRows.length > 0 ? 'Frekuensi Penggunaan Item' : 'Pantauan Level Stok'}
+              {usageRows.length > 0 ? 'Item Terlaris' : 'Stok Terendah'}
             </h2>
           </div>
           <span className="text-[0.72rem] text-[var(--muted)]">
@@ -432,7 +430,7 @@ export function InventoryCharts({
         )}
 
         <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--muted)]">
-          <span>Estimasi margin stok</span>
+          <span>Estimasi margin</span>
           <span className="tabular-nums font-semibold text-[var(--text)]">
             +{rp(analytics.potentialMargin)}
           </span>

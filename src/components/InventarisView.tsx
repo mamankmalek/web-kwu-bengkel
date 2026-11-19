@@ -74,14 +74,9 @@ export function InventarisView({
     <div id="view-inventaris" className="ios-enter space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-[1.45rem] md:text-[1.75rem] font-extrabold tracking-tight m-0">
-            Inventaris
-          </h1>
-          <p className="text-xs md:text-sm text-[var(--muted)] m-0 mt-0.5">
-            Analitik stok interaktif, pemakaian item, harga modal & jual suku cadang
-          </p>
-        </div>
+        <h1 className="text-[1.45rem] md:text-[1.75rem] font-extrabold tracking-tight m-0">
+          Inventaris
+        </h1>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -127,7 +122,7 @@ export function InventarisView({
           <input
             id="inventory-search"
             type="search"
-            placeholder="Cari ID, nama barang, atau kategori..."
+            placeholder="Cari produk..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -301,7 +296,7 @@ export function InventarisView({
         <div className="glass-panel p-10 text-center text-sm text-[var(--muted)] flex flex-col items-center">
           <Package className="w-9 h-9 mb-2.5 opacity-45" />
           <p className="m-0 font-medium">
-            {loading ? 'Memuat inventaris...' : 'Tidak ada item yang sesuai.'}
+            {loading ? 'Memuat...' : 'Tidak ada produk.'}
           </p>
         </div>
       )}
@@ -313,7 +308,7 @@ export function InventarisView({
             onClick={() => setLimit((prev) => prev + 60)}
             className="ios-btn ios-btn-secondary"
           >
-            Tampilkan lainnya ({formatCount(filtered.length - limit)} tersisa)
+            Muat lainnya ({formatCount(filtered.length - limit)})
           </button>
         </div>
       )}

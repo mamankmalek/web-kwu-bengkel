@@ -1,18 +1,31 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ClipboardList, Wrench } from 'lucide-react';
 import type { WorkOrder } from '../types/lbmm';
 import { apiClient } from '../utils/api';
+import {
+  formatManualWoId,
+  getUsedWoNumbers,
+  MANUAL_WO_MAX,
+  MANUAL_WO_MIN,
+} from '../utils/business';
 import { clearFormRequest, getOrCreateFormRequest } from '../utils/storage';
 
 const PENERIMA_LIST = ['Dila', 'Kira', 'Mamad', 'Febri', 'Akmal'];
+const WO_NUMBERS = Array.from(
+  { length: MANUAL_WO_MAX - MANUAL_WO_MIN + 1 },
+  (_, i) => MANUAL_WO_MIN + i
+);
 
 export function WoCreateView({
+  todayWOList = [],
   onCreated,
   onNotify,
 }: {
+  todayWOList?: WorkOrder[];
   onCreated: (wo: WorkOrder) => void;
   onNotify: (msg: string, type?: 'success' | 'warning' | 'error') => void;
 }) {
+  const [nomorText, setNomorText] = useState('');
   const [nama, setNama] = useState('');
   const [nopol, setNopol] = useState('');
   const [motor, setMotor] = useState('');
@@ -20,8 +33,35 @@ export function WoCreateView({
   const [keluhan, setKeluhan] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const usedNumbers = useMemo(() => getUsedWoNumbers(todayWOList), [todayWOList]);
+
+  const parsedInput = nomorText === '' ? null : Number.parseInt(nomorText, 10);
+  const isOutOfRange =
+    parsedInput !== null && (parsedInput < MANUAL_WO_MIN || parsedInput > MANUAL_WO_MAX);
+  const selectedNomor =
+    parsedInput !== null && !isOutOfRange ? parsedInput : null;
+
+  const handleManualInput = (rawValue: string) => {
+    const digitsOnly = rawValue.replace(/\D/g, '').replace(/^0+/, '').slice(0, 2);
+    setNomorText(digitsOnly);
+  };
+
+  const handleSelectChange = (val: string) => {
+    setNomorText(val);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedNomor === null) {
+      onNotify(
+        isOutOfRange
+          ? 'Nomor Work Order harus berupa angka antara 1 sampai 50.'
+          : 'Pilih atau ketik nomor Work Order (1–50) terlebih dahulu.',
+        'warning'
+      );
+      return;
+    }
+
     const cleanNama = nama.trim();
     const cleanNopol = nopol.trim();
     const cleanMotor = motor.trim();
@@ -32,9 +72,12 @@ export function WoCreateView({
       return;
     }
 
+    const formattedIdWO = formatManualWoId(selectedNomor);
     const requestId = getOrCreateFormRequest('wo');
     setSubmitting(true);
     const obj = {
+      idWO: formattedIdWO,
+      nomor: selectedNomor,
       nama: cleanNama,
       nopol: cleanNopol,
       motor: cleanMotor,
@@ -45,27 +88,31 @@ export function WoCreateView({
     try {
       const res = await apiClient.call<{
         status?: string;
-        idWO: string;
+        idWO?: string;
         tgl: string;
         wo?: Partial<WorkOrder>;
       }>('simpanWO', {
         obj,
+        idWO: formattedIdWO,
+        nomorWO: selectedNomor,
         requestId,
       });
 
       clearFormRequest('wo');
+      const finalIdWO = res.idWO || formattedIdWO;
       const createdWo: WorkOrder = {
         ...obj,
         ...(res.wo || {}),
-        idWO: res.idWO,
+        idWO: finalIdWO,
         tgl: res.tgl,
       };
+      setNomorText('');
       setNama('');
       setNopol('');
       setMotor('');
       setPenerima('');
       setKeluhan('');
-      onNotify('WO disimpan.', 'success');
+      onNotify(`${finalIdWO} disimpan.`, 'success');
       onCreated(createdWo);
     } catch (error) {
       const err = error as Error & { code?: string };
@@ -80,14 +127,9 @@ export function WoCreateView({
   return (
     <div id="view-wo" className="ios-enter max-w-[760px] mx-auto space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-[1.45rem] md:text-[1.75rem] font-extrabold tracking-tight m-0">
-            WO Baru
-          </h1>
-          <p className="text-xs md:text-sm text-[var(--muted)] m-0 mt-0.5">
-            Catat identitas motor pelanggan sebelum lanjut ke kasir
-          </p>
-        </div>
+        <h1 className="text-[1.45rem] md:text-[1.75rem] font-extrabold tracking-tight m-0">
+          WO Baru
+        </h1>
         <a href="#/daftar-wo" className="ios-btn ios-btn-secondary">
           <ClipboardList className="w-4 h-4" />
           <span>Lihat daftar</span>
@@ -96,6 +138,87 @@ export function WoCreateView({
 
       <section className="glass-panel p-5 md:p-6">
         <form id="wo-form" onSubmit={handleSubmit} className="space-y-4">
+          {/* Manual WO Number Selection (1 - 50) */}
+          <div className="space-y-2 pb-4 border-b border-[var(--glass-border-subtle)]">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="block text-xs font-semibold text-[var(--muted)]">
+                Nomor WO (1–50)
+              </span>
+              <span className="text-xs tabular-nums font-semibold">
+                {selectedNomor !== null ? (
+                  <span id="wo-nomor-preview" className="font-mono-code font-bold text-[var(--primary)]">
+                    {formatManualWoId(selectedNomor)}
+                  </span>
+                ) : (
+                  <span id="wo-nomor-preview" className="text-[var(--muted)]">
+                    —
+                  </span>
+                )}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label
+                  htmlFor="wo-nomor-select"
+                  className="block text-[11px] font-semibold text-[var(--muted)]"
+                >
+                  Pilih nomor
+                </label>
+                <select
+                  id="wo-nomor-select"
+                  className="ios-select tabular-nums"
+                  value={selectedNomor !== null ? String(selectedNomor) : ''}
+                  onChange={(e) => handleSelectChange(e.target.value)}
+                >
+                  <option value="">Pilih 1–50</option>
+                  {WO_NUMBERS.map((num) => {
+                    const isUsed = usedNumbers.has(num);
+                    return (
+                      <option key={num} value={String(num)}>
+                        {num} ({formatManualWoId(num)}
+                        {isUsed ? ' · sudah ada' : ''})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label
+                  htmlFor="wo-nomor-input"
+                  className="block text-[11px] font-semibold text-[var(--muted)]"
+                >
+                  Ketik nomor
+                </label>
+                <input
+                  id="wo-nomor-input"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
+                  placeholder="1–50"
+                  aria-invalid={isOutOfRange}
+                  className={`ios-input font-mono-code tabular-nums ${
+                    isOutOfRange ? 'border-[var(--danger)]' : ''
+                  }`}
+                  value={nomorText}
+                  onChange={(e) => handleManualInput(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {isOutOfRange ? (
+              <p className="text-[11px] font-medium text-[var(--danger)] m-0" role="alert">
+                Angka harus 1–50.
+              </p>
+            ) : selectedNomor !== null && usedNumbers.has(selectedNomor) ? (
+              <p className="text-[11px] font-medium text-[var(--warning)] m-0">
+                {formatManualWoId(selectedNomor)} sudah ada hari ini.
+              </p>
+            ) : null}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label htmlFor="wo-nama" className="block text-xs font-semibold text-[var(--muted)]">
@@ -165,12 +288,12 @@ export function WoCreateView({
 
           <div className="space-y-1.5">
             <label htmlFor="wo-keluhan" className="block text-xs font-semibold text-[var(--muted)]">
-              Keluhan / catatan servis
+              Keluhan
             </label>
             <textarea
               id="wo-keluhan"
               className="ios-textarea min-h-[108px]"
-              placeholder="Ganti oli, cek rem, atau keluhan lainnya..."
+              placeholder="Catatan keluhan (opsional)"
               value={keluhan}
               onChange={(e) => setKeluhan(e.target.value)}
             />

@@ -151,7 +151,7 @@ export function WoListView({
 
         {detailLoading && !wo ? (
           <div className="glass-panel p-8 text-center text-sm text-[var(--muted)]">
-            Memuat detail work order...
+            Memuat...
           </div>
         ) : wo ? (
           <>
@@ -183,9 +183,9 @@ export function WoListView({
               <div className="p-4 rounded-2xl bg-[var(--surface-recessed)]/70 flex flex-col justify-between">
                 <div>
                   <div className="text-xs font-semibold text-[var(--muted)] mb-1">
-                    Keluhan & Catatan
+                    Keluhan
                   </div>
-                  <p className="text-sm m-0 whitespace-pre-wrap">{wo.keluhan || 'Tidak ada catatan.'}</p>
+                  <p className="text-sm m-0 whitespace-pre-wrap">{wo.keluhan || '—'}</p>
                 </div>
                 {trx && (
                   <div className="mt-4 pt-3 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -216,7 +216,7 @@ export function WoListView({
 
             {items.length > 0 && (
               <section className="glass-panel p-5">
-                <h2 className="text-sm font-bold m-0 mb-3">Rincian Item Servis & Suku Cadang</h2>
+                <h2 className="text-sm font-bold m-0 mb-3">Item Servis & Part</h2>
                 <div className="glass-table-wrap">
                   <table className="glass-table responsive-table">
                     <thead>
@@ -458,7 +458,7 @@ export function WoListView({
       ) : (
         <div className="glass-panel p-10 text-center text-sm text-[var(--muted)] flex flex-col items-center">
           <ClipboardList className="w-9 h-9 mb-2.5 opacity-45" />
-          <p className="m-0 font-medium">Tidak ada work order pada tanggal ini.</p>
+          <p className="m-0 font-medium">Belum ada WO.</p>
         </div>
       )}
     </div>

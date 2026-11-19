@@ -7,7 +7,10 @@ import {
   computeCartSummary,
   computeInventoryAnalytics,
   computePresetRange,
+  extractWoNumber,
   filterWorkOrders,
+  formatManualWoId,
+  getUsedWoNumbers,
   updateCartItemQty,
 } from './business';
 import type { ProductRow, WorkOrder } from '../types/lbmm';
@@ -114,3 +117,37 @@ test('computeInventoryAnalytics aggregates stock health, categories, and valuati
   assert.equal(analytics.totalRetailValue, 2 * 55000 + 14 * 50000);
   assert.equal(analytics.watchlist[0].id, 'PRD002');
 });
+
+test('manual WO numbering formats 1-50 and extracts used numbers', () => {
+  assert.equal(formatManualWoId(1), 'WO-001');
+  assert.equal(formatManualWoId(9), 'WO-009');
+  assert.equal(formatManualWoId(50), 'WO-050');
+  assert.equal(extractWoNumber('WO-007'), 7);
+  assert.equal(extractWoNumber('wo-50'), 50);
+  assert.equal(extractWoNumber('12'), 12);
+  assert.equal(extractWoNumber('WO-051'), null);
+  assert.equal(extractWoNumber('WO-000'), null);
+
+  const used = getUsedWoNumbers([
+    {
+      idWO: 'WO-001',
+      tgl: '2026-11-19',
+      nama: 'A',
+      nopol: 'L 1 AA',
+      motor: 'Beat',
+      keluhan: '',
+      penerima: 'Dila',
+    },
+    {
+      idWO: 'WO-025',
+      tgl: '2026-11-19',
+      nama: 'B',
+      nopol: 'L 2 BB',
+      motor: 'Vario',
+      keluhan: '',
+      penerima: 'Kira',
+    },
+  ]);
+  assert.deepEqual([...used].sort((a, b) => a - b), [1, 25]);
+});
+

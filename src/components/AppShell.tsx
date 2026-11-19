@@ -214,7 +214,7 @@ export function AppShell({
                   Foto belum tersimpan
                 </strong>
                 <p id="pending-proof-text" className="text-xs m-0 mt-0.5 text-[var(--text)]">
-                  Pembayaran {pendingProof.idTrans} tercatat. Kirim ulang foto saja.
+                  Transaksi {pendingProof.idTrans} tercatat. Kirim ulang foto.
                 </p>
               </div>
               <button

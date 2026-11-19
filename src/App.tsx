@@ -382,6 +382,27 @@ export default function App() {
     [notify]
   );
 
+  const loadTodayWOs = useCallback(async () => {
+    if (!authRef.current) return;
+    const today = todayInTimezone(timezone);
+    try {
+      const woRaw = await apiClient.call<WorkOrder[] | { list?: WorkOrder[]; data?: WorkOrder[] }>(
+        'getWOList',
+        { tgl: today }
+      );
+      const woRows = Array.isArray(woRaw)
+        ? woRaw
+        : Array.isArray(woRaw?.list)
+        ? woRaw.list
+        : Array.isArray(woRaw?.data)
+        ? woRaw.data
+        : [];
+      setTodayWOList(woRows);
+    } catch {
+      // silent background check for used WO numbers
+    }
+  }, [timezone]);
+
   const loadWoDetail = useCallback(
     async (idWO: string, tgl: string) => {
       if (!authRef.current) return;
@@ -442,6 +463,8 @@ export default function App() {
 
     if (route === 'home') {
       loadHomeData();
+    } else if (route === 'wo') {
+      loadTodayWOs();
     } else if (route === 'daftar-wo') {
       if (woDetailId) {
         const targetTgl = validDay(woDetailTgl) ? woDetailTgl! : woListDate;
@@ -470,6 +493,7 @@ export default function App() {
     reportEnd,
     timezone,
     loadHomeData,
+    loadTodayWOs,
     loadWoDetail,
     loadWoList,
     loadProducts,
@@ -779,9 +803,14 @@ export default function App() {
 
           {parsedRoute.route === 'wo' && (
             <WoCreateView
+              todayWOList={todayWOList}
               onNotify={notify}
               onCreated={(createdWo) => {
                 setActiveWO(createdWo);
+                setTodayWOList((prev) => [
+                  createdWo,
+                  ...prev.filter((w) => w.idWO !== createdWo.idWO),
+                ]);
                 setCart([]);
                 setCheckoutRequest(null);
                 apiClient.invalidate(true);

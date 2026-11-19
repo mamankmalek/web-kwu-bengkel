@@ -145,14 +145,9 @@ export function AbsenView({
 
   return (
     <div id="view-absen" className="ios-enter max-w-[780px] mx-auto space-y-4">
-      <div>
-        <h1 className="text-[1.45rem] md:text-[1.75rem] font-extrabold tracking-tight m-0">
-          Absen KWU
-        </h1>
-        <p className="text-xs md:text-sm text-[var(--muted)] m-0 mt-0.5">
-          Kehadiran staf & fungsio dengan foto berpenanda waktu dan koordinat GPS
-        </p>
-      </div>
+      <h1 className="text-[1.45rem] md:text-[1.75rem] font-extrabold tracking-tight m-0">
+        Absen KWU
+      </h1>
 
       <section className="glass-panel p-5 md:p-6 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

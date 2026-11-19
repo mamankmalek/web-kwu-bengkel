@@ -152,7 +152,7 @@ export function KasirView({
           </div>
           {activeWO.keluhan && (
             <p className="text-xs text-[var(--muted)] m-0 mt-1 truncate">
-              Keluhan: {activeWO.keluhan} (Penerima: {activeWO.penerima})
+              {activeWO.keluhan} · {activeWO.penerima}
             </p>
           )}
         </div>
@@ -172,7 +172,7 @@ export function KasirView({
                 <input
                   id="cashier-search"
                   type="search"
-                  placeholder="Cari produk, oli, atau jasa servis..."
+                  placeholder="Cari produk atau jasa..."
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -354,7 +354,7 @@ export function KasirView({
                 onClick={() => setLimit((prev) => prev + 60)}
                 className="ios-btn ios-btn-secondary"
               >
-                Tampilkan lainnya ({formatCount(filteredProducts.length - limit)} tersisa)
+                Muat lainnya ({formatCount(filteredProducts.length - limit)})
               </button>
             </div>
           )}
@@ -429,7 +429,7 @@ export function KasirView({
             </div>
           ) : (
             <div className="py-8 text-center text-xs text-[var(--muted)] rounded-2xl bg-[var(--surface-recessed)]/60">
-              Pilih layanan atau suku cadang dari daftar di samping.
+              Keranjang kosong
             </div>
           )}
 
@@ -472,7 +472,7 @@ export function KasirView({
                   className="w-44 h-44 mx-auto object-contain rounded-xl"
                 />
                 <p className="text-[11px] font-semibold text-neutral-600 m-0">
-                  Pindai QRIS lalu lampirkan foto bukti transfer
+                  Pindai QRIS
                 </p>
               </div>
             )}
@@ -482,7 +482,7 @@ export function KasirView({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-[var(--muted)]">
-                Bukti pembayaran {payMethod === 'QRIS' ? '(wajib)' : '(opsional)'}
+                Bukti bayar {payMethod === 'QRIS' ? '(wajib)' : '(opsional)'}
               </span>
               {paymentProof && (
                 <button
@@ -533,7 +533,7 @@ export function KasirView({
           {/* Kirim Nota Collapsible */}
           <details className="rounded-2xl bg-[var(--surface-recessed)]/70 p-3">
             <summary className="flex items-center justify-between text-xs font-semibold list-none">
-              <span>Kirim nota ke pelanggan (Email / WhatsApp)</span>
+              <span>Kirim nota (Email / WhatsApp)</span>
               <ChevronDown className="w-4 h-4 text-[var(--muted)]" />
             </summary>
             <div className="pt-3 space-y-2.5 text-xs">
@@ -544,7 +544,7 @@ export function KasirView({
                   onChange={(e) => onSetSendEmail(e.target.checked)}
                 />
                 <Mail className="w-3.5 h-3.5 text-[var(--muted)]" />
-                <span>Kirim ke Email</span>
+                <span>Email</span>
               </label>
               {sendEmail && (
                 <input
@@ -563,7 +563,7 @@ export function KasirView({
                   onChange={(e) => onSetSendWa(e.target.checked)}
                 />
                 <MessageCircle className="w-3.5 h-3.5 text-[var(--muted)]" />
-                <span>Siapkan tautan WhatsApp</span>
+                <span>WhatsApp</span>
               </label>
               {sendWa && (
                 <input

@@ -294,3 +294,33 @@ export function validateReportData(data: unknown): ReportData {
   }
   return d;
 }
+
+export const MANUAL_WO_MIN = 1;
+export const MANUAL_WO_MAX = 50;
+
+export function formatManualWoId(num: number): string {
+  const safe = Math.min(MANUAL_WO_MAX, Math.max(MANUAL_WO_MIN, Math.trunc(num)));
+  return `WO-${String(safe).padStart(3, '0')}`;
+}
+
+export function extractWoNumber(idWO: string): number | null {
+  const match = String(idWO || '')
+    .trim()
+    .match(/(?:^|\D)(\d+)$/);
+  if (!match) return null;
+  const num = Number.parseInt(match[1], 10);
+  if (!Number.isInteger(num) || num < MANUAL_WO_MIN || num > MANUAL_WO_MAX) {
+    return null;
+  }
+  return num;
+}
+
+export function getUsedWoNumbers(rows: WorkOrder[]): Set<number> {
+  const used = new Set<number>();
+  for (const row of rows) {
+    const num = extractWoNumber(row.idWO);
+    if (num !== null) used.add(num);
+  }
+  return used;
+}
+

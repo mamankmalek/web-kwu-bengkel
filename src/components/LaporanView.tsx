@@ -176,7 +176,7 @@ export function LaporanView({
             Laporan
           </h1>
           <p className="text-xs md:text-sm text-[var(--muted)] m-0 mt-0.5">
-            {report ? `${dateLabel(report.range.start)} – ${dateLabel(report.range.end)}` : 'Memuat laporan...'}
+            {report ? `${dateLabel(report.range.start)} – ${dateLabel(report.range.end)}` : 'Memuat...'}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -259,11 +259,11 @@ export function LaporanView({
         <article className="glass-panel p-4">
           <div className="text-xs font-semibold text-[var(--muted)]">Omzet</div>
           <div className="text-xl font-extrabold tabular-nums mt-1">{s ? rp(s.revenue) : '—'}</div>
-          <div className="text-[11px] text-[var(--muted)] mt-1 tabular-nums">
-            {s?.revenueChange != null
-              ? `${s.revenueChange >= 0 ? '+' : ''}${s.revenueChange}% vs periode lalu`
-              : 'Pendapatan servis & part'}
-          </div>
+          {s?.revenueChange != null && (
+            <div className="text-[11px] text-[var(--muted)] mt-1 tabular-nums">
+              {`${s.revenueChange >= 0 ? '+' : ''}${s.revenueChange}% vs periode lalu`}
+            </div>
+          )}
         </article>
         <article className="glass-panel p-4">
           <div className="text-xs font-semibold text-[var(--muted)]">Laba kotor</div>
@@ -295,7 +295,6 @@ export function LaporanView({
           <div className="text-xl font-extrabold tabular-nums mt-1 text-[var(--primary)]">
             {s ? rp(s.netProfit) : '—'}
           </div>
-          <div className="text-[11px] text-[var(--muted)] mt-1">Laba kotor – biaya ops</div>
         </article>
         <article className="glass-panel p-4">
           <div className="text-xs font-semibold text-[var(--muted)]">Transaksi</div>
@@ -311,7 +310,6 @@ export function LaporanView({
           <div className="text-xl font-extrabold tabular-nums mt-1">
             {s ? rp(s.avgTransaction) : '—'}
           </div>
-          <div className="text-[11px] text-[var(--muted)] mt-1">Nilai per nota</div>
         </article>
         <article className="glass-panel p-4">
           <div className="text-xs font-semibold text-[var(--muted)]">Stok menipis</div>
@@ -498,7 +496,7 @@ export function LaporanView({
             </div>
           ) : (
             <div className="py-12 text-center text-xs text-[var(--muted)] rounded-2xl bg-[var(--surface-recessed)]/60">
-              Belum ada data harian pada periode ini.
+              Belum ada data.
             </div>
           )}
         </article>
@@ -542,7 +540,7 @@ export function LaporanView({
           <article className="glass-panel p-5">
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 className="w-4 h-4 text-[var(--primary)]" />
-              <h2 className="text-[1rem] font-bold m-0">Item paling sering dipakai</h2>
+              <h2 className="text-[1rem] font-bold m-0">Item terlaris</h2>
             </div>
             {topProducts.length > 0 ? (
               <div className="space-y-2.5">
@@ -566,7 +564,7 @@ export function LaporanView({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-[var(--muted)] m-0">Belum ada penjualan item.</p>
+              <p className="text-xs text-[var(--muted)] m-0">Belum ada data.</p>
             )}
           </article>
         </div>
@@ -609,7 +607,7 @@ export function LaporanView({
             </table>
           </div>
         ) : (
-          <p className="text-xs text-[var(--muted)] m-0">Belum ada data penjualan produk.</p>
+          <p className="text-xs text-[var(--muted)] m-0">Belum ada data.</p>
         )}
       </section>
 
@@ -680,7 +678,7 @@ export function LaporanView({
             </table>
           </div>
         ) : (
-          <p className="text-xs text-[var(--muted)] m-0">Tidak ada transaksi pada periode ini.</p>
+          <p className="text-xs text-[var(--muted)] m-0">Belum ada transaksi.</p>
         )}
       </section>
 
@@ -718,7 +716,7 @@ export function LaporanView({
               </table>
             </div>
           ) : (
-            <p className="text-xs text-[var(--muted)] m-0">Data stok belum dimuat.</p>
+            <p className="text-xs text-[var(--muted)] m-0">Belum ada data.</p>
           )}
         </section>
 
@@ -788,9 +786,7 @@ export function LaporanView({
               </table>
             </div>
           ) : (
-            <p className="text-xs text-[var(--muted)] m-0">
-              Belum ada catatan pembelian atau pengeluaran.
-            </p>
+            <p className="text-xs text-[var(--muted)] m-0">Belum ada catatan.</p>
           )}
         </section>
       </div>
