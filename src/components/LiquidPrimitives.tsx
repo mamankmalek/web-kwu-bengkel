@@ -5,8 +5,7 @@ import { getProductPhoto } from '../utils/format';
 
 export const LBMM_LOGO_URL =
   'https://lh3.googleusercontent.com/d/1UyFmKqy67OOp0ozVS1aaJFmYRZ_ywwsT';
-export const QRIS_IMAGE_URL =
-  'https://lh3.googleusercontent.com/d/1cucn850qvAEA2BsHmrjRtkbxvftT5Cir';
+export const QRIS_IMAGE_URL = '/assets/aistudio/qris_baru_bengkel_ec1a11bc.jpeg';
 
 export function LbmmLogoFilter() {
   return (

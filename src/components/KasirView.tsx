@@ -468,8 +468,7 @@ export function KasirView({
                 <img
                   src={QRIS_IMAGE_URL}
                   alt="Kode QRIS LBMM"
-                  referrerPolicy="no-referrer"
-                  className="w-44 h-44 mx-auto object-contain rounded-xl"
+                  className="w-full max-w-[220px] h-auto mx-auto object-contain rounded-xl"
                 />
                 <p className="text-[11px] font-semibold text-neutral-600 m-0">
                   Pindai QRIS
