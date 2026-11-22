@@ -25,7 +25,7 @@ export function WoCreateView({
   onCreated: (wo: WorkOrder) => void;
   onNotify: (msg: string, type?: 'success' | 'warning' | 'error') => void;
 }) {
-  const [nomorText, setNomorText] = useState('');
+  const [nomor, setNomor] = useState('');
   const [nama, setNama] = useState('');
   const [nopol, setNopol] = useState('');
   const [motor, setMotor] = useState('');
@@ -35,30 +35,19 @@ export function WoCreateView({
 
   const usedNumbers = useMemo(() => getUsedWoNumbers(todayWOList), [todayWOList]);
 
-  const parsedInput = nomorText === '' ? null : Number.parseInt(nomorText, 10);
-  const isOutOfRange =
-    parsedInput !== null && (parsedInput < MANUAL_WO_MIN || parsedInput > MANUAL_WO_MAX);
+  const parsedNomor = nomor === '' ? null : Number.parseInt(nomor, 10);
   const selectedNomor =
-    parsedInput !== null && !isOutOfRange ? parsedInput : null;
-
-  const handleManualInput = (rawValue: string) => {
-    const digitsOnly = rawValue.replace(/\D/g, '').replace(/^0+/, '').slice(0, 2);
-    setNomorText(digitsOnly);
-  };
-
-  const handleSelectChange = (val: string) => {
-    setNomorText(val);
-  };
+    parsedNomor !== null &&
+    Number.isInteger(parsedNomor) &&
+    parsedNomor >= MANUAL_WO_MIN &&
+    parsedNomor <= MANUAL_WO_MAX
+      ? parsedNomor
+      : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedNomor === null) {
-      onNotify(
-        isOutOfRange
-          ? 'Nomor Work Order harus berupa angka antara 1 sampai 50.'
-          : 'Pilih atau ketik nomor Work Order (1–50) terlebih dahulu.',
-        'warning'
-      );
+      onNotify('Pilih nomor Work Order (1–50) terlebih dahulu.', 'warning');
       return;
     }
 
@@ -106,7 +95,7 @@ export function WoCreateView({
         idWO: finalIdWO,
         tgl: res.tgl,
       };
-      setNomorText('');
+      setNomor('');
       setNama('');
       setNopol('');
       setMotor('');
@@ -138,12 +127,15 @@ export function WoCreateView({
 
       <section className="glass-panel p-5 md:p-6">
         <form id="wo-form" onSubmit={handleSubmit} className="space-y-4">
-          {/* Manual WO Number Selection (1 - 50) */}
-          <div className="space-y-2 pb-4 border-b border-[var(--glass-border-subtle)]">
+          {/* Manual WO Number Dropdown (1 - 50) */}
+          <div className="space-y-1.5 pb-4 border-b border-[var(--glass-border-subtle)]">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="block text-xs font-semibold text-[var(--muted)]">
+              <label
+                htmlFor="wo-nomor-select"
+                className="block text-xs font-semibold text-[var(--muted)]"
+              >
                 Nomor WO (1–50)
-              </span>
+              </label>
               <span className="text-xs tabular-nums font-semibold">
                 {selectedNomor !== null ? (
                   <span id="wo-nomor-preview" className="font-mono-code font-bold text-[var(--primary)]">
@@ -157,66 +149,30 @@ export function WoCreateView({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label
-                  htmlFor="wo-nomor-select"
-                  className="block text-[11px] font-semibold text-[var(--muted)]"
-                >
-                  Pilih nomor
-                </label>
-                <select
-                  id="wo-nomor-select"
-                  className="ios-select tabular-nums"
-                  value={selectedNomor !== null ? String(selectedNomor) : ''}
-                  onChange={(e) => handleSelectChange(e.target.value)}
-                >
-                  <option value="">Pilih 1–50</option>
-                  {WO_NUMBERS.map((num) => {
-                    const isUsed = usedNumbers.has(num);
-                    return (
-                      <option key={num} value={String(num)}>
-                        {num} ({formatManualWoId(num)}
-                        {isUsed ? ' · sudah ada' : ''})
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
+            <select
+              id="wo-nomor-select"
+              className="ios-select tabular-nums"
+              value={nomor}
+              onChange={(e) => setNomor(e.target.value)}
+              required
+            >
+              <option value="">Pilih 1–50</option>
+              {WO_NUMBERS.map((num) => {
+                const isUsed = usedNumbers.has(num);
+                return (
+                  <option key={num} value={String(num)}>
+                    {num} ({formatManualWoId(num)}
+                    {isUsed ? ' · sudah ada' : ''})
+                  </option>
+                );
+              })}
+            </select>
 
-              <div className="space-y-1">
-                <label
-                  htmlFor="wo-nomor-input"
-                  className="block text-[11px] font-semibold text-[var(--muted)]"
-                >
-                  Ketik nomor
-                </label>
-                <input
-                  id="wo-nomor-input"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  autoComplete="off"
-                  placeholder="1–50"
-                  aria-invalid={isOutOfRange}
-                  className={`ios-input font-mono-code tabular-nums ${
-                    isOutOfRange ? 'border-[var(--danger)]' : ''
-                  }`}
-                  value={nomorText}
-                  onChange={(e) => handleManualInput(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {isOutOfRange ? (
-              <p className="text-[11px] font-medium text-[var(--danger)] m-0" role="alert">
-                Angka harus 1–50.
-              </p>
-            ) : selectedNomor !== null && usedNumbers.has(selectedNomor) ? (
+            {selectedNomor !== null && usedNumbers.has(selectedNomor) && (
               <p className="text-[11px] font-medium text-[var(--warning)] m-0">
                 {formatManualWoId(selectedNomor)} sudah ada hari ini.
               </p>
-            ) : null}
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

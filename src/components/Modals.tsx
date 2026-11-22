@@ -245,6 +245,25 @@ export function ProductModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanNama = nama.trim();
+    const numModal = Number(modalPrice || 0);
+    const numJual = Number(jualPrice || 0);
+    const numStok = kategori === 'Jasa Servis' ? 0 : Number(stok || 0);
+    if (!cleanNama) {
+      onNotify('Masukkan nama produk atau layanan.', 'warning');
+      return;
+    }
+    if (
+      !Number.isFinite(numModal) ||
+      numModal < 0 ||
+      !Number.isFinite(numJual) ||
+      numJual < 0 ||
+      !Number.isFinite(numStok) ||
+      numStok < 0
+    ) {
+      onNotify('Harga dan stok harus berupa angka valid (minimal 0).', 'warning');
+      return;
+    }
     const cleanImg = gambar.trim();
     if (cleanImg && !getProductPhoto(cleanImg)) {
       onNotify('Tautan gambar harus berupa URL HTTPS yang valid.', 'warning');
@@ -255,10 +274,10 @@ export function ProductModal({
       await apiClient.call(isEdit ? 'updateProduk' : 'tambahProduk', {
         obj: {
           id: id.trim(),
-          nama: nama.trim(),
-          modal: Number(modalPrice || 0),
-          jual: Number(jualPrice || 0),
-          stok: kategori === 'Jasa Servis' ? 0 : Number(stok || 0),
+          nama: cleanNama,
+          modal: numModal,
+          jual: numJual,
+          stok: numStok,
           kategori,
           gambar: cleanImg,
         },
@@ -445,6 +464,8 @@ export function PurchaseModal({
     } else {
       setNewCategory('Sparepart');
       setSalePrice('');
+      setUnitCost('');
+      setTotal('');
     }
   };
 
@@ -801,7 +822,12 @@ export function ExpenseModal({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) setDate(todayInTimezone());
+    if (open) {
+      setCategory(EXPENSE_CATEGORIES[0]);
+      setAmount('');
+      setNote('');
+      setDate(todayInTimezone());
+    }
   }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1063,7 +1089,7 @@ export function ReceiptModal({
     onNotify(`Nota ${typeLabel} diunduh (berbagi langsung tidak didukung browser).`, 'success');
   };
 
-  const waDigits = normalizeWhatsAppPhone(defaultWaPhone || '');
+  const waDigits = normalizeWhatsAppPhone(data.waPhone || defaultWaPhone || '');
   const waText = encodeURIComponent(
     `*${profile.nama || 'LBMM FT-IRS ITS'}*\nNota: ${data.idTrans}\nWO: ${data.wo.idWO}\nPelanggan: ${data.wo.nama} (${data.wo.nopol})\nTotal: ${rp(data.total)} (${data.metode})\nTerima kasih.`
   );

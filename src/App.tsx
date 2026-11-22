@@ -29,7 +29,7 @@ import {
   updateCartItemQty,
   validateReportData,
 } from './utils/business';
-import { formatCount, labelTgl, rp, todayInTimezone, validDay } from './utils/format';
+import { formatCount, labelTgl, normalizeWhatsAppPhone, rp, todayInTimezone, validDay } from './utils/format';
 import {
   EMPTY_WO,
   loadAuth,
@@ -406,6 +406,7 @@ export default function App() {
   const loadWoDetail = useCallback(
     async (idWO: string, tgl: string) => {
       if (!authRef.current) return;
+      setWoDetail(null);
       setLoadingWoDetail(true);
       try {
         const res = await apiClient.call<WorkOrderDetailResponse>('getWODetail', {
@@ -419,11 +420,12 @@ export default function App() {
           notify(error.message || 'Gagal memuat detail WO.', 'error');
         }
         setWoDetail(null);
+        navigate('#/daftar-wo');
       } finally {
         setLoadingWoDetail(false);
       }
     },
-    [notify]
+    [navigate, notify]
   );
 
   const loadFullReport = useCallback(
@@ -456,6 +458,11 @@ export default function App() {
     loadProducts();
   }, [auth, loadProfile, loadProducts]);
 
+  const productsCountRef = useRef(products.length);
+  productsCountRef.current = products.length;
+  const fullReportRef = useRef(fullReport);
+  fullReportRef.current = fullReport;
+
   // Route-triggered data loading
   useEffect(() => {
     if (!auth) return;
@@ -474,15 +481,15 @@ export default function App() {
         loadWoList(woListDate);
       }
     } else if (route === 'kasir') {
-      if (!products.length) loadProducts();
+      if (!productsCountRef.current) loadProducts();
     } else if (route === 'inventaris') {
       loadProducts();
-      if (!fullReport) {
+      if (!fullReportRef.current) {
         const { start, end } = computePresetRange('month', todayInTimezone(timezone));
         loadFullReport(start, end);
       }
     } else if (route === 'laporan') {
-      if (!products.length) loadProducts();
+      if (!productsCountRef.current) loadProducts();
       loadFullReport(reportStart, reportEnd);
     }
   }, [
@@ -498,8 +505,6 @@ export default function App() {
     loadWoList,
     loadProducts,
     loadFullReport,
-    products.length,
-    fullReport,
   ]);
 
   // Auth Actions
@@ -578,6 +583,14 @@ export default function App() {
       notify('Pembayaran QRIS membutuhkan foto bukti pembayaran.', 'warning');
       return;
     }
+    if (sendEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.trim())) {
+      notify('Masukkan alamat email pelanggan yang valid.', 'warning');
+      return;
+    }
+    if (sendWa && waInput.trim() && !normalizeWhatsAppPhone(waInput)) {
+      notify('Nomor WhatsApp tidak valid.', 'warning');
+      return;
+    }
     setConfirmPayOpen(true);
   };
 
@@ -637,6 +650,7 @@ export default function App() {
         idTrans,
         proofUrl: uploadedProofUrl,
         tanggal: res.tanggal || new Date().toLocaleString('id-ID'),
+        waPhone: sendWa ? waInput.trim() : '',
       };
 
       setLastTrxData(trxSnapshot);
@@ -647,9 +661,12 @@ export default function App() {
       setCart([]);
       setCheckoutRequest(null);
       setActiveWO({ ...EMPTY_WO });
+      setPayMethod('Tunai');
       setPaymentProof(null);
       setSendEmail(false);
+      setSendWa(false);
       setEmailInput('');
+      setWaInput('');
 
       apiClient.invalidate(true);
       loadProducts(true);
@@ -659,8 +676,12 @@ export default function App() {
       if (error.code === 'PRICE_CHANGED') {
         notify('Harga produk berubah di database. Harga keranjang diperbarui.', 'warning');
         try {
-          const freshRes = await apiClient.call<ProductRow[]>('getProduk', { fresh: true });
-          const freshList = Array.isArray(freshRes) ? freshRes : [];
+          const freshRes = await apiClient.call<ProductRow[] | { data?: ProductRow[] }>('getProduk', { fresh: true });
+          const freshList = Array.isArray(freshRes)
+            ? freshRes
+            : Array.isArray(freshRes?.data)
+            ? freshRes.data
+            : [];
           setProducts(freshList);
           setCart((prev) =>
             prev.map((item) => {
@@ -968,7 +989,10 @@ export default function App() {
           setCameraTarget('purchase');
           setCameraOpen(true);
         }}
-        onClose={() => setPurchaseModalOpen(false)}
+        onClose={() => {
+          setPurchaseModalOpen(false);
+          setPurchaseReceiptPhoto(null);
+        }}
         onSaved={() => {
           loadProducts(true);
           if (parsedRoute.route === 'laporan') {

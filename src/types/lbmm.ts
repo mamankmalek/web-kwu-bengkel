@@ -87,6 +87,7 @@ export interface LastTransactionData {
   idTrans: string;
   proofUrl: string;
   tanggal?: string;
+  waPhone?: string;
 }
 
 export interface ReportSummary {

@@ -524,6 +524,15 @@ select {
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .ios-enter {
   animation: ios-enter 0.26s var(--ease-spring) both;
 }
@@ -671,17 +680,37 @@ select {
   body > *:not(#receipt-print-portal) {
     display: none !important;
   }
+  #receipt-print-portal,
+  #receipt-print-portal > div {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
   .no-print {
     display: none !important;
   }
   #struk-area {
     width: 100% !important;
+    max-width: none !important;
     padding: 4mm !important;
     margin: 0 !important;
     background: #ffffff !important;
     color: #000000 !important;
     font-size: 9pt !important;
+    border: 0 !important;
     border-radius: 0 !important;
+    box-shadow: none !important;
   }
   #struk-area .receipt-logo {
     filter: url(#lbmm-logo-light) !important;

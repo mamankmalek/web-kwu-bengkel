@@ -18,7 +18,7 @@ import type {
   WoFilterStatus,
 } from '../types/lbmm';
 import { filterWorkOrders } from '../utils/business';
-import { addDays, formatCount, labelTgl, rp, safeExternalHttpsUrl } from '../utils/format';
+import { addDays, formatCount, labelTgl, rp, safeExternalHttpsUrl, validDay } from '../utils/format';
 import { StatusChip } from './LiquidPrimitives';
 
 function customerInitials(name: string): string {
@@ -294,7 +294,7 @@ export function WoListView({
                 type="date"
                 aria-label="Tanggal WO"
                 value={date}
-                onChange={(e) => e.target.value && onChangeDate(e.target.value)}
+                onChange={(e) => validDay(e.target.value) && onChangeDate(e.target.value)}
                 className="ios-input ios-input-icon pr-3 min-h-[42px] w-[168px]"
               />
             </div>

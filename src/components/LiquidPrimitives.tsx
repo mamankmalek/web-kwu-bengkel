@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Sun, Moon, Package, Wrench, X } from 'lucide-react';
 import type { ThemeMode } from '../types/lbmm';
 import { getProductPhoto } from '../utils/format';
@@ -147,12 +148,26 @@ export function IosModal({
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+
+    const prevCount = Number(document.body.dataset.modalCount || '0');
+    document.body.dataset.modalCount = String(prevCount + 1);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      const nextCount = Math.max(0, Number(document.body.dataset.modalCount || '1') - 1);
+      if (nextCount === 0) {
+        delete document.body.dataset.modalCount;
+        document.body.style.overflow = '';
+      } else {
+        document.body.dataset.modalCount = String(nextCount);
+      }
+    };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div
       id={id}
       role="dialog"
@@ -182,6 +197,7 @@ export function IosModal({
         )}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

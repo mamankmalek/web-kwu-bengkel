@@ -20,6 +20,7 @@ import {
   formatCount,
   rp,
   safeExternalHttpsUrl,
+  validDay,
 } from '../utils/format';
 import { triggerFileDownload } from '../utils/receiptExport';
 import { StatusChip } from './LiquidPrimitives';
@@ -160,9 +161,9 @@ export function LaporanView({
   const hoveredDay: DailyReportRow | null =
     hoveredDayIndex !== null && daily[hoveredDayIndex] ? daily[hoveredDayIndex] : null;
 
-  const payTotal = Math.max(1, (s?.cash || 0) + (s?.qris || 0));
-  const cashPct = Math.round(((s?.cash || 0) / payTotal) * 100);
-  const qrisPct = 100 - cashPct;
+  const payTotal = (s?.cash || 0) + (s?.qris || 0);
+  const cashPct = payTotal > 0 ? Math.round(((s?.cash || 0) / payTotal) * 100) : 0;
+  const qrisPct = payTotal > 0 ? 100 - cashPct : 0;
 
   const topProducts = report?.topProducts || [];
   const maxTopQty = Math.max(1, ...topProducts.map((t) => Number(t.qty) || 0));
@@ -229,7 +230,14 @@ export function LaporanView({
                 type="date"
                 aria-label="Dari tanggal"
                 value={customStart}
-                onChange={(e) => onChangeCustomRange(e.target.value, customEnd)}
+                onChange={(e) => {
+                  const nextStart = e.target.value;
+                  if (!validDay(nextStart)) return;
+                  onChangeCustomRange(
+                    nextStart,
+                    nextStart > customEnd ? nextStart : customEnd
+                  );
+                }}
                 className="ios-input min-h-[40px] w-[148px]"
               />
               <span className="text-xs text-[var(--muted)]">s/d</span>
@@ -237,7 +245,14 @@ export function LaporanView({
                 type="date"
                 aria-label="Sampai tanggal"
                 value={customEnd}
-                onChange={(e) => onChangeCustomRange(customStart, e.target.value)}
+                onChange={(e) => {
+                  const nextEnd = e.target.value;
+                  if (!validDay(nextEnd)) return;
+                  onChangeCustomRange(
+                    nextEnd < customStart ? nextEnd : customStart,
+                    nextEnd
+                  );
+                }}
                 className="ios-input min-h-[40px] w-[148px]"
               />
             </>
