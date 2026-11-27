@@ -5,7 +5,11 @@ import type {
   ProductRow,
   TopProductRow,
 } from '../types/lbmm';
-import { computeInventoryAnalytics } from '../utils/business';
+import {
+  computeInventoryAnalytics,
+  isServiceCategory,
+  normalizeProductCategory,
+} from '../utils/business';
 import { formatCount, rp } from '../utils/format';
 
 type SegmentKey = Exclude<InventoryStatusFilter, 'all'>;
@@ -102,7 +106,7 @@ export function InventoryCharts({
         return {
           id: item.id,
           name: item.name,
-          category: item.category || (prod ? prod[5] : 'Produk'),
+          category: normalizeProductCategory(item.category || (prod ? prod[5] : 'Produk')),
           qty: Number(item.qty) || 0,
           revenue: Number(item.revenue) || 0,
           stock: prod ? Number(prod[4]) : null,
@@ -257,7 +261,7 @@ export function InventoryCharts({
 
         <div className="space-y-3 my-auto">
           {analytics.categories.map((cat) => {
-            const isService = cat.name === 'Jasa Servis';
+            const isService = isServiceCategory(cat.name);
             const metricVal = isService ? cat.skuCount : cat.totalUnits;
             const widthPct = Math.max(8, Math.min(100, (metricVal / maxCatUnits) * 100));
             const selected = activeCategory === cat.name;
@@ -363,10 +367,9 @@ export function InventoryCharts({
                       className="h-full rounded-full transition-all duration-300"
                       style={{
                         width: `${pct}%`,
-                        background:
-                          item.category === 'Jasa Servis'
-                            ? 'var(--chart-info)'
-                            : 'var(--primary)',
+                        background: isServiceCategory(item.category)
+                          ? 'var(--chart-info)'
+                          : 'var(--primary)',
                       }}
                     />
                   </div>
@@ -375,7 +378,7 @@ export function InventoryCharts({
                       <span>{item.category}</span>
                       <span>
                         Omzet {rp(item.revenue)}
-                        {item.stock !== null && item.category !== 'Jasa Servis'
+                        {item.stock !== null && !isServiceCategory(item.category)
                           ? ` · Sisa ${item.stock}`
                           : ''}
                       </span>

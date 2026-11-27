@@ -15,7 +15,11 @@ import type {
   TopProductRow,
   ViewMode,
 } from '../types/lbmm';
-import { getProductStatus } from '../utils/business';
+import {
+  getProductStatus,
+  normalizeProductCategory,
+  sortProductsByCategoryOrder,
+} from '../utils/business';
 import { formatCount, rp } from '../utils/format';
 import { InventoryCharts } from './InventoryCharts';
 import { ProductMedia, StatusChip } from './LiquidPrimitives';
@@ -60,12 +64,15 @@ export function InventarisView({
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return products.filter((row) => {
+    const matched = products.filter((row) => {
       if (statusFilter !== 'all' && getProductStatus(row) !== statusFilter) return false;
-      if (categoryFilter !== 'all' && String(row[5]) !== categoryFilter) return false;
+      if (categoryFilter !== 'all' && normalizeProductCategory(row[5]) !== categoryFilter) {
+        return false;
+      }
       if (!q) return true;
-      return `${row[0]} ${row[1]} ${row[5]}`.toLowerCase().includes(q);
+      return `${row[0]} ${row[1]} ${normalizeProductCategory(row[5])}`.toLowerCase().includes(q);
     });
+    return sortProductsByCategoryOrder(matched);
   }, [products, search, statusFilter, categoryFilter]);
 
   const visible = filtered.slice(0, limit);
@@ -199,7 +206,8 @@ export function InventarisView({
           }
         >
           {visible.map((row) => {
-            const [id, nama, modal, jual, stok, kategori, gambar] = row;
+            const [id, nama, modal, jual, stok, rawKategori, gambar] = row;
+            const kategori = normalizeProductCategory(rawKategori);
             const status = getProductStatus(row);
             const chipStatus =
               status === 'empty'

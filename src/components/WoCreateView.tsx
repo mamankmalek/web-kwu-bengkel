@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { ClipboardList, Wrench } from 'lucide-react';
-import type { WorkOrder } from '../types/lbmm';
+import type { MotorType, WorkOrder } from '../types/lbmm';
 import { apiClient } from '../utils/api';
 import {
   formatManualWoId,
+  formatMotorWithType,
   getUsedWoNumbers,
   MANUAL_WO_MAX,
   MANUAL_WO_MIN,
+  MOTOR_TYPES,
 } from '../utils/business';
 import { clearFormRequest, getOrCreateFormRequest } from '../utils/storage';
 
@@ -29,6 +31,7 @@ export function WoCreateView({
   const [nama, setNama] = useState('');
   const [nopol, setNopol] = useState('');
   const [motor, setMotor] = useState('');
+  const [tipeMotor, setTipeMotor] = useState<'' | MotorType>('');
   const [penerima, setPenerima] = useState('');
   const [keluhan, setKeluhan] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -60,8 +63,13 @@ export function WoCreateView({
       onNotify('Lengkapi data pelanggan.', 'warning');
       return;
     }
+    if (!tipeMotor) {
+      onNotify('Pilih tipe motor (Matic/Bebek atau Kopling) terlebih dahulu.', 'warning');
+      return;
+    }
 
     const formattedIdWO = formatManualWoId(selectedNomor);
+    const formattedMotor = formatMotorWithType(cleanMotor, tipeMotor);
     const requestId = getOrCreateFormRequest('wo');
     setSubmitting(true);
     const obj = {
@@ -69,7 +77,8 @@ export function WoCreateView({
       nomor: selectedNomor,
       nama: cleanNama,
       nopol: cleanNopol,
-      motor: cleanMotor,
+      motor: formattedMotor,
+      tipeMotor,
       keluhan: cleanKeluhan,
       penerima,
     };
@@ -99,6 +108,7 @@ export function WoCreateView({
       setNama('');
       setNopol('');
       setMotor('');
+      setTipeMotor('');
       setPenerima('');
       setKeluhan('');
       onNotify(`${finalIdWO} disimpan.`, 'success');
@@ -208,13 +218,13 @@ export function WoCreateView({
 
             <div className="space-y-1.5">
               <label htmlFor="wo-motor" className="block text-xs font-semibold text-[var(--muted)]">
-                Jenis motor
+                Model motor
               </label>
               <input
                 id="wo-motor"
                 type="text"
                 className="ios-input"
-                placeholder="Vario 150 / Beat"
+                placeholder="Vario 150 / CB150R"
                 value={motor}
                 onChange={(e) => setMotor(e.target.value)}
                 required
@@ -222,6 +232,26 @@ export function WoCreateView({
             </div>
 
             <div className="space-y-1.5">
+              <label htmlFor="wo-tipe-motor" className="block text-xs font-semibold text-[var(--muted)]">
+                Jenis motor
+              </label>
+              <select
+                id="wo-tipe-motor"
+                className="ios-select"
+                value={tipeMotor}
+                onChange={(e) => setTipeMotor(e.target.value as '' | MotorType)}
+                required
+              >
+                <option value="">Pilih jenis motor</option>
+                {MOTOR_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2">
               <label htmlFor="wo-penerima" className="block text-xs font-semibold text-[var(--muted)]">
                 Penerima servis
               </label>

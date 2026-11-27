@@ -19,12 +19,24 @@ import {
 } from 'lucide-react';
 import type {
   CartItem,
+  MotorType,
   ProductRow,
   ProofPayload,
   ViewMode,
   WorkOrder,
 } from '../types/lbmm';
-import { computeCartSummary, getProductStatus } from '../utils/business';
+import {
+  MOTOR_TYPES,
+  PRODUCT_CATEGORIES,
+  computeCartSummary,
+  extractMotorType,
+  extractServiceMotorType,
+  getProductStatus,
+  isServiceCategory,
+  isServiceMatchingMotorType,
+  normalizeProductCategory,
+  sortProductsByCategoryOrder,
+} from '../utils/business';
 import { formatCount, rp } from '../utils/format';
 import { readEvidenceFile } from '../utils/image';
 import { ProductMedia, QRIS_IMAGE_URL, StatusChip } from './LiquidPrimitives';
@@ -53,6 +65,7 @@ export function KasirView({
   onSetSendWa,
   onSetEmailInput,
   onSetWaInput,
+  onSetActiveMotorType,
   onCheckout,
   onNotify,
 }: {
@@ -79,6 +92,7 @@ export function KasirView({
   onSetSendWa: (v: boolean) => void;
   onSetEmailInput: (v: string) => void;
   onSetWaInput: (v: string) => void;
+  onSetActiveMotorType: (type: MotorType) => void;
   onCheckout: () => void;
   onNotify: (msg: string, type?: 'success' | 'warning' | 'error') => void;
 }) {
@@ -102,22 +116,36 @@ export function KasirView({
     }
   };
 
+  const activeMotorType = useMemo(() => extractMotorType(activeWO), [activeWO]);
+
   const categories = useMemo(() => {
-    const set = new Set<string>();
+    const present = new Set<string>();
     products.forEach((p) => {
-      if (p[5]) set.add(String(p[5]));
+      if (p[5] && isServiceMatchingMotorType(p, activeMotorType)) {
+        present.add(normalizeProductCategory(p[5]));
+      }
     });
-    return ['all', ...Array.from(set)];
-  }, [products]);
+    const ordered: string[] = [];
+    for (const known of PRODUCT_CATEGORIES) {
+      if (present.has(known)) {
+        ordered.push(known);
+        present.delete(known);
+      }
+    }
+    return ['all', ...ordered, ...Array.from(present)];
+  }, [products, activeMotorType]);
 
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return products.filter((p) => {
-      if (categoryFilter !== 'all' && String(p[5]) !== categoryFilter) return false;
+    const matched = products.filter((p) => {
+      if (!isServiceMatchingMotorType(p, activeMotorType)) return false;
+      const cat = normalizeProductCategory(p[5]);
+      if (categoryFilter !== 'all' && cat !== categoryFilter) return false;
       if (!q) return true;
-      return `${p[0]} ${p[1]} ${p[5]}`.toLowerCase().includes(q);
+      return `${p[0]} ${p[1]} ${cat}`.toLowerCase().includes(q);
     });
-  }, [products, search, categoryFilter]);
+    return sortProductsByCategoryOrder(matched);
+  }, [products, search, categoryFilter, activeMotorType]);
 
   const visibleProducts = filteredProducts.slice(0, limit);
   const summary = useMemo(() => computeCartSummary(cart), [cart]);
@@ -156,9 +184,35 @@ export function KasirView({
             </p>
           )}
         </div>
-        <a href="#/daftar-wo" className="ios-btn ios-btn-secondary min-h-[38px] text-xs">
-          Ganti WO
-        </a>
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="inline-flex items-center gap-1 p-1 rounded-full bg-[var(--surface-recessed)]"
+            role="group"
+            aria-label="Jenis motor WO"
+          >
+            {MOTOR_TYPES.map((type) => {
+              const selected = activeMotorType === type;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => onSetActiveMotorType(type)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-semibold border-0 transition-colors ${
+                    selected
+                      ? 'bg-[var(--primary)] text-white shadow-sm'
+                      : 'bg-transparent text-[var(--muted)] hover:text-[var(--text)]'
+                  }`}
+                >
+                  {type}
+                </button>
+              );
+            })}
+          </div>
+          <a href="#/daftar-wo" className="ios-btn ios-btn-secondary min-h-[38px] text-xs">
+            Ganti WO
+          </a>
+        </div>
       </section>
 
       {/* Split Workspace: Catalog (left) + Sticky Cart (right) */}
@@ -258,9 +312,13 @@ export function KasirView({
               }
             >
               {visibleProducts.map((prod) => {
-                const [id, nama, , jual, stok, kategori, gambar] = prod;
+                const [id, nama, , jual, stok, rawKategori, gambar] = prod;
+                const kategori = normalizeProductCategory(rawKategori);
                 const status = getProductStatus(prod);
-                const outOfStock = kategori !== 'Jasa Servis' && Number(stok) <= 0;
+                const isSvc = isServiceCategory(kategori);
+                const svcMotorType = isSvc ? extractServiceMotorType(nama) : 'Umum';
+                const svcLabel = svcMotorType === 'Umum' ? 'Jasa' : svcMotorType;
+                const outOfStock = !isSvc && Number(stok) <= 0;
                 const inCartQty = cart.find((c) => String(c.id) === String(id))?.qty || 0;
 
                 return viewMode === 'grid' ? (
@@ -303,7 +361,7 @@ export function KasirView({
                             ? 'neutral'
                             : 'success'
                         }
-                        label={kategori === 'Jasa Servis' ? 'Jasa' : `Stok ${stok}`}
+                        label={isSvc ? svcLabel : `Stok ${stok}`}
                       />
                     </div>
                   </button>
@@ -323,7 +381,7 @@ export function KasirView({
                         <div className="font-bold text-sm truncate">{nama}</div>
                         <div className="text-xs text-[var(--muted)]">
                           {kategori} ·{' '}
-                          {kategori === 'Jasa Servis' ? 'Layanan' : `Stok ${formatCount(stok)}`}
+                          {isSvc ? (svcMotorType === 'Umum' ? 'Layanan' : svcMotorType) : `Stok ${formatCount(stok)}`}
                         </div>
                       </div>
                     </div>

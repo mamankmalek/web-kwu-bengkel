@@ -14,12 +14,27 @@ import {
 import type {
   CameraTarget,
   LastTransactionData,
+  MotorType,
   ProductRow,
   ProofPayload,
   ShopProfile,
 } from '../types/lbmm';
 import { apiClient } from '../utils/api';
-import { calcPurchaseTotal, calcPurchaseUnitCost } from '../utils/business';
+import {
+  MOTOR_TYPES,
+  PHYSICAL_PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORIES,
+  calcPurchaseTotal,
+  calcPurchaseUnitCost,
+  extractServiceMotorType,
+  formatProductId,
+  formatServiceNameWithMotorType,
+  getNextProductId,
+  getProductIdRange,
+  getServiceBaseName,
+  isServiceCategory,
+  normalizeProductCategory,
+} from '../utils/business';
 import {
   formatCount,
   getProductPhoto,
@@ -37,7 +52,6 @@ import {
 import { clearFormRequest, getOrCreateFormRequest } from '../utils/storage';
 import { IosModal } from './LiquidPrimitives';
 
-const PRODUCT_CATEGORIES = ['Oli', 'Sparepart', 'Jasa Servis'];
 const PURCHASE_STAFF = ['Dila', 'Kira', 'Mamad', 'Febri', 'Akmal', 'Radhit', 'Vanza', 'Meuthia', 'Kevin', 'Jawahir'];
 const EXPENSE_CATEGORIES = ['Operasional', 'Listrik & air', 'Transportasi', 'Peralatan', 'Lainnya'];
 
@@ -201,12 +215,14 @@ export function CameraModal({
 /* ---------------- 2. Product Modal (Add / Edit) ---------------- */
 export function ProductModal({
   open,
+  products,
   editingProduct,
   onClose,
   onSaved,
   onNotify,
 }: {
   open: boolean;
+  products: ProductRow[];
   editingProduct: ProductRow | null;
   onClose: () => void;
   onSaved: () => void;
@@ -218,19 +234,28 @@ export function ProductModal({
   const [modalPrice, setModalPrice] = useState('');
   const [jualPrice, setJualPrice] = useState('');
   const [stok, setStok] = useState('');
-  const [kategori, setKategori] = useState('Sparepart');
+  const [kategori, setKategori] = useState<string>('Oli');
+  const [serviceMotorType, setServiceMotorType] = useState<MotorType | 'Umum'>('Umum');
   const [gambar, setGambar] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     if (editingProduct) {
+      const normalizedCat = normalizeProductCategory(editingProduct[5] || 'Sparepart');
+      const rawName = String(editingProduct[1] || '');
       setId(String(editingProduct[0] || ''));
-      setNama(String(editingProduct[1] || ''));
+      setKategori(normalizedCat);
+      if (isServiceCategory(normalizedCat)) {
+        setNama(getServiceBaseName(rawName));
+        setServiceMotorType(extractServiceMotorType(rawName));
+      } else {
+        setNama(rawName);
+        setServiceMotorType('Umum');
+      }
       setModalPrice(String(editingProduct[2] ?? ''));
       setJualPrice(String(editingProduct[3] ?? ''));
       setStok(String(editingProduct[4] ?? '0'));
-      setKategori(String(editingProduct[5] || 'Sparepart'));
       setGambar(String(editingProduct[6] || ''));
     } else {
       setId('');
@@ -238,18 +263,36 @@ export function ProductModal({
       setModalPrice('');
       setJualPrice('');
       setStok('0');
-      setKategori('Sparepart');
+      setKategori('Oli');
+      setServiceMotorType('Umum');
       setGambar('');
     }
   }, [open, editingProduct]);
 
+  const effectiveId = isEdit ? id.trim() : getNextProductId(kategori, products) || '';
+  const idRange = getProductIdRange(kategori);
+  const isService = isServiceCategory(kategori);
+  const isRangeFull = !isEdit && !effectiveId;
+  const hasUnknownCategory =
+    Boolean(kategori) && !(PRODUCT_CATEGORIES as readonly string[]).includes(kategori);
+  const resolvedNamePreview = isService
+    ? formatServiceNameWithMotorType(nama, serviceMotorType)
+    : nama.trim();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!effectiveId) {
+      onNotify('Slot ID untuk kategori ini sudah penuh.', 'warning');
+      return;
+    }
     const cleanNama = nama.trim();
+    const finalNama = isService
+      ? formatServiceNameWithMotorType(cleanNama, serviceMotorType)
+      : cleanNama;
     const numModal = Number(modalPrice || 0);
     const numJual = Number(jualPrice || 0);
-    const numStok = kategori === 'Jasa Servis' ? 0 : Number(stok || 0);
-    if (!cleanNama) {
+    const numStok = isService ? 0 : Number(stok || 0);
+    if (!finalNama) {
       onNotify('Masukkan nama produk atau layanan.', 'warning');
       return;
     }
@@ -273,8 +316,8 @@ export function ProductModal({
     try {
       await apiClient.call(isEdit ? 'updateProduk' : 'tambahProduk', {
         obj: {
-          id: id.trim(),
-          nama: cleanNama,
+          id: effectiveId,
+          nama: finalNama,
           modal: numModal,
           jual: numJual,
           stok: numStok,
@@ -282,7 +325,10 @@ export function ProductModal({
           gambar: cleanImg,
         },
       });
-      onNotify(isEdit ? 'Produk diperbarui.' : 'Produk ditambahkan.', 'success');
+      onNotify(
+        isEdit ? 'Produk diperbarui.' : `Produk ${effectiveId} ditambahkan.`,
+        'success'
+      );
       onSaved();
       onClose();
     } catch (err) {
@@ -302,14 +348,31 @@ export function ProductModal({
       title={isEdit ? 'Edit produk' : 'Tambah produk'}
     >
       <form onSubmit={handleSubmit} className="space-y-3.5">
-        {isEdit && (
-          <div className="space-y-1">
+        <div className="space-y-1">
+          <div className="flex items-center justify-between gap-2">
             <label htmlFor="prod-id" className="text-xs font-semibold text-[var(--muted)]">
-              ID Produk
+              {isEdit ? 'ID Produk' : 'ID Produk (otomatis)'}
             </label>
-            <input id="prod-id" className="ios-input font-mono-code" value={id} readOnly />
+            {idRange && (
+              <span className="font-mono-code text-[11px] font-semibold text-[var(--muted)]">
+                {formatProductId(idRange.min)}–{formatProductId(idRange.max)}
+              </span>
+            )}
           </div>
-        )}
+          <input
+            id="prod-id"
+            className={`ios-input font-mono-code font-bold ${
+              isRangeFull ? 'border-[var(--danger)] text-[var(--danger)]' : ''
+            }`}
+            value={effectiveId || 'Slot ID penuh'}
+            readOnly
+          />
+          {isRangeFull && (
+            <p className="text-[11px] font-medium text-[var(--danger)] m-0" role="alert">
+              Slot ID untuk kategori {kategori} sudah penuh.
+            </p>
+          )}
+        </div>
 
         <div className="space-y-1">
           <label htmlFor="prod-nama" className="text-xs font-semibold text-[var(--muted)]">
@@ -322,6 +385,11 @@ export function ProductModal({
             onChange={(e) => setNama(e.target.value)}
             required
           />
+          {isService && serviceMotorType !== 'Umum' && resolvedNamePreview && (
+            <p className="text-[11px] text-[var(--muted)] m-0">
+              Tersimpan sebagai <strong className="text-[var(--text)]">{resolvedNamePreview}</strong>
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -340,23 +408,48 @@ export function ProductModal({
                   {c}
                 </option>
               ))}
+              {hasUnknownCategory && (
+                <option key={kategori} value={kategori}>
+                  {kategori}
+                </option>
+              )}
             </select>
           </div>
 
-          <div className="space-y-1">
-            <label htmlFor="prod-stok" className="text-xs font-semibold text-[var(--muted)]">
-              Stok
-            </label>
-            <input
-              id="prod-stok"
-              type="number"
-              min="0"
-              className="ios-input tabular-nums"
-              value={kategori === 'Jasa Servis' ? '0' : stok}
-              disabled={kategori === 'Jasa Servis'}
-              onChange={(e) => setStok(e.target.value)}
-            />
-          </div>
+          {isService ? (
+            <div className="space-y-1">
+              <label htmlFor="prod-service-motor" className="text-xs font-semibold text-[var(--muted)]">
+                Jenis motor jasa
+              </label>
+              <select
+                id="prod-service-motor"
+                className="ios-select"
+                value={serviceMotorType}
+                onChange={(e) => setServiceMotorType(e.target.value as MotorType | 'Umum')}
+              >
+                <option value="Umum">Semua motor (Umum)</option>
+                {MOTOR_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <label htmlFor="prod-stok" className="text-xs font-semibold text-[var(--muted)]">
+                Stok
+              </label>
+              <input
+                id="prod-stok"
+                type="number"
+                min="0"
+                className="ios-input tabular-nums"
+                value={stok}
+                onChange={(e) => setStok(e.target.value)}
+              />
+            </div>
+          )}
 
           <div className="space-y-1">
             <label htmlFor="prod-modal" className="text-xs font-semibold text-[var(--muted)]">
@@ -407,7 +500,12 @@ export function ProductModal({
           <button type="button" onClick={onClose} className="ios-btn ios-btn-secondary">
             Batal
           </button>
-          <button type="submit" disabled={saving} className="ios-btn ios-btn-primary">
+          <button
+            type="submit"
+            id="prod-submit"
+            disabled={saving || isRangeFull}
+            className="ios-btn ios-btn-primary"
+          >
             {saving ? 'Menyimpan...' : 'Simpan'}
           </button>
         </div>
@@ -436,11 +534,11 @@ export function PurchaseModal({
   onSaved: () => void;
   onNotify: (msg: string, type?: 'success' | 'warning' | 'error') => void;
 }) {
-  const physicalProducts = products.filter((p) => p[5] !== 'Jasa Servis');
+  const physicalProducts = products.filter((p) => !isServiceCategory(p[5]));
   const today = todayInTimezone();
   const [productId, setProductId] = useState('@new');
   const [newName, setNewName] = useState('');
-  const [newCategory, setNewCategory] = useState('Sparepart');
+  const [newCategory, setNewCategory] = useState<string>('Oli');
   const [salePrice, setSalePrice] = useState('');
   const [date, setDate] = useState(today);
   const [qty, setQty] = useState('1');
@@ -452,6 +550,9 @@ export function PurchaseModal({
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const nextNewProductId =
+    productId === '@new' ? getNextProductId(newCategory, products) : null;
+
   const syncSelectedProduct = (nextId: string) => {
     setProductId(nextId);
     const matched = physicalProducts.find((p) => String(p[0]) === nextId);
@@ -459,10 +560,10 @@ export function PurchaseModal({
       const nextCost = String(Number(matched[2]) || '');
       setUnitCost(nextCost);
       setSalePrice(String(Number(matched[3]) || ''));
-      setNewCategory(String(matched[5] || 'Sparepart'));
+      setNewCategory(normalizeProductCategory(matched[5] || 'Sparepart'));
       setTotal(calcPurchaseTotal(qty, nextCost));
     } else {
-      setNewCategory('Sparepart');
+      setNewCategory('Oli');
       setSalePrice('');
       setUnitCost('');
       setTotal('');
@@ -519,6 +620,10 @@ export function PurchaseModal({
       onNotify('Masukkan nama produk baru.', 'warning');
       return;
     }
+    if (productMode === 'new' && !nextNewProductId) {
+      onNotify(`Slot ID untuk kategori ${newCategory} sudah penuh.`, 'warning');
+      return;
+    }
     if (
       !Number.isFinite(numQty) ||
       numQty <= 0 ||
@@ -537,7 +642,7 @@ export function PurchaseModal({
         purchaseType: 'stock',
         productMode,
         productName: productMode === 'new' ? newName.trim() : '',
-        productId: productMode === 'new' ? '' : productId,
+        productId: productMode === 'new' ? nextNewProductId : productId,
         category: newCategory,
         qty: numQty,
         unitCost: numUnitCost,
@@ -590,6 +695,17 @@ export function PurchaseModal({
 
         {productId === '@new' && (
           <div className="p-3 rounded-2xl bg-[var(--surface-recessed)]/70 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="sm:col-span-2 flex items-center justify-between gap-2 text-xs">
+              <span className="font-semibold text-[var(--muted)]">ID produk otomatis</span>
+              <span
+                id="pur-new-id"
+                className={`font-mono-code font-bold ${
+                  nextNewProductId ? 'text-[var(--primary)]' : 'text-[var(--danger)]'
+                }`}
+              >
+                {nextNewProductId || 'Slot ID penuh'}
+              </span>
+            </div>
             <input
               type="text"
               placeholder="Nama produk baru"
@@ -599,12 +715,16 @@ export function PurchaseModal({
               required
             />
             <select
+              id="pur-new-cat"
               className="ios-select"
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
             >
-              <option value="Sparepart">Sparepart</option>
-              <option value="Oli">Oli</option>
+              {PHYSICAL_PRODUCT_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
             </select>
             <input
               type="number"

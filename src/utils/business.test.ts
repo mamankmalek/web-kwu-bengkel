@@ -7,10 +7,22 @@ import {
   computeCartSummary,
   computeInventoryAnalytics,
   computePresetRange,
+  extractMotorType,
+  extractServiceMotorType,
   extractWoNumber,
   filterWorkOrders,
   formatManualWoId,
+  formatMotorWithType,
+  formatServiceNameWithMotorType,
+  getNextProductId,
+  getServiceBaseName,
   getUsedWoNumbers,
+  isServiceCategory,
+  isServiceMatchingMotorType,
+  normalizeProductCategory,
+  PRODUCT_CATEGORIES,
+  remapCartServicesForMotorType,
+  sortProductsByCategoryOrder,
   updateCartItemQty,
 } from './business';
 import type { ProductRow, WorkOrder } from '../types/lbmm';
@@ -149,5 +161,170 @@ test('manual WO numbering formats 1-50 and extracts used numbers', () => {
     },
   ]);
   assert.deepEqual([...used].sort((a, b) => a - b), [1, 25]);
+});
+
+test('category normalization and sequential product ID generation cover all 5 ranges', () => {
+  assert.deepEqual([...PRODUCT_CATEGORIES], [
+    'Oli',
+    'Busi',
+    'Jasa Servis',
+    'Sparepart',
+    'Consumable Servis',
+  ]);
+
+  assert.equal(normalizeProductCategory('Consumables servis'), 'Consumable Servis');
+  assert.equal(normalizeProductCategory('consumable servis'), 'Consumable Servis');
+  assert.equal(normalizeProductCategory('oli'), 'Oli');
+  assert.equal(normalizeProductCategory('busi'), 'Busi');
+  assert.equal(normalizeProductCategory('jasa servis'), 'Jasa Servis');
+  assert.equal(isServiceCategory('Jasa Servis'), true);
+  assert.equal(isServiceCategory('Consumable Servis'), false);
+
+  // Empty catalog starts each category at its range minimum
+  assert.equal(getNextProductId('Oli', []), 'PRD001');
+  assert.equal(getNextProductId('Busi', []), 'PRD025');
+  assert.equal(getNextProductId('Sparepart', []), 'PRD050');
+  assert.equal(getNextProductId('Jasa Servis', []), 'PRD100');
+  assert.equal(getNextProductId('Consumable Servis', []), 'PRD150');
+  assert.equal(getNextProductId('Consumables servis', []), 'PRD150');
+
+  // Continues sequentially from highest ID inside each range
+  const existing: ProductRow[] = [
+    ['PRD001', 'Oli A', 40000, 55000, 5, 'Oli'],
+    ['PRD004', 'Oli B', 45000, 60000, 3, 'Oli'],
+    ['PRD025', 'Busi A', 18000, 28000, 10, 'Busi'],
+    ['PRD052', 'Kampas', 30000, 45000, 8, 'Sparepart'],
+    ['JSA001', 'Servis Legacy', 0, 35000, 0, 'Jasa Servis'],
+    ['PRD101', 'Servis CVT', 0, 50000, 0, 'Jasa Servis'],
+    ['PRD150', 'Carb Cleaner', 20000, 30000, 4, 'Consumables servis'],
+    ['PRD151', 'Brake Cleaner', 22000, 32000, 0, 'Consumable Servis'],
+  ];
+
+  assert.equal(getNextProductId('Oli', existing), 'PRD005');
+  assert.equal(getNextProductId('Busi', existing), 'PRD026');
+  assert.equal(getNextProductId('Sparepart', existing), 'PRD053');
+  assert.equal(getNextProductId('Jasa Servis', existing), 'PRD102');
+  assert.equal(getNextProductId('Consumable Servis', existing), 'PRD152');
+
+  // Ceiling + gap reuse + full range check
+  const almostFullOli: ProductRow[] = Array.from({ length: 24 }, (_, idx) => {
+    const n = idx + 1;
+    return [
+      `PRD${String(n).padStart(3, '0')}`,
+      `Oli ${n}`,
+      40000,
+      55000,
+      1,
+      'Oli',
+    ] as ProductRow;
+  }).filter((row) => row[0] !== 'PRD010');
+  assert.equal(getNextProductId('Oli', almostFullOli), 'PRD010');
+
+  const fullOli: ProductRow[] = Array.from({ length: 24 }, (_, idx) => [
+    `PRD${String(idx + 1).padStart(3, '0')}`,
+    `Oli ${idx + 1}`,
+    40000,
+    55000,
+    1,
+    'Oli',
+  ]);
+  assert.equal(getNextProductId('Oli', fullOli), null);
+
+  // Consumable Servis behaves as physical stocked product in analytics & cart
+  const analytics = computeInventoryAnalytics(existing);
+  const consumableCat = analytics.categories.find((c) => c.name === 'Consumable Servis');
+  assert.ok(consumableCat);
+  assert.equal(consumableCat.skuCount, 2);
+  assert.equal(consumableCat.totalUnits, 4);
+
+  const outOfStockConsumable = addCartItem([], existing[7]);
+  assert.ok(outOfStockConsumable.error);
+});
+
+test('motor type formatting, Jasa Servis matching, and cart remapping handle Matic/Bebek vs Kopling', () => {
+  assert.equal(formatMotorWithType('Vario 150', 'Matic/Bebek'), 'Vario 150 (Matic/Bebek)');
+  assert.equal(
+    formatMotorWithType('CB150R (Matic/Bebek)', 'Kopling'),
+    'CB150R (Kopling)'
+  );
+  assert.equal(
+    extractMotorType({ motor: 'CB150R (Kopling)', tipeMotor: undefined }),
+    'Kopling'
+  );
+  assert.equal(
+    extractMotorType({ motor: 'Beat', tipeMotor: 'Matic/Bebek' }),
+    'Matic/Bebek'
+  );
+
+  assert.equal(
+    formatServiceNameWithMotorType('Servis Ringan', 'Kopling'),
+    'Servis Ringan (Kopling)'
+  );
+  assert.equal(
+    formatServiceNameWithMotorType('Servis Ringan (Kopling)', 'Matic/Bebek'),
+    'Servis Ringan (Matic/Bebek)'
+  );
+  assert.equal(
+    formatServiceNameWithMotorType('Servis Ringan (Kopling)', 'Umum'),
+    'Servis Ringan'
+  );
+  assert.equal(getServiceBaseName('Servis Ringan (Kopling)'), 'Servis Ringan');
+  assert.equal(extractServiceMotorType('Servis Ringan (Kopling)'), 'Kopling');
+  assert.equal(extractServiceMotorType('Servis Ringan (Matic/Bebek)'), 'Matic/Bebek');
+  assert.equal(extractServiceMotorType('Tambal Ban'), 'Umum');
+
+  const catalog: ProductRow[] = [
+    ['PRD001', 'Oli MPX2', 42000, 55000, 5, 'Oli'],
+    ['PRD100', 'Servis Ringan (Matic/Bebek)', 0, 45000, 0, 'Jasa Servis'],
+    ['PRD101', 'Servis Ringan (Kopling)', 0, 60000, 0, 'Jasa Servis'],
+    ['PRD102', 'Tambal Ban', 0, 20000, 0, 'Jasa Servis'],
+  ];
+
+  // Matic/Bebek sees Matic/Bebek + Umum + physical items, hides Kopling
+  assert.equal(isServiceMatchingMotorType(catalog[0], 'Matic/Bebek'), true);
+  assert.equal(isServiceMatchingMotorType(catalog[1], 'Matic/Bebek'), true);
+  assert.equal(isServiceMatchingMotorType(catalog[2], 'Matic/Bebek'), false);
+  assert.equal(isServiceMatchingMotorType(catalog[3], 'Matic/Bebek'), true);
+
+  // Kopling sees Kopling + Umum + physical items, hides Matic/Bebek
+  assert.equal(isServiceMatchingMotorType(catalog[1], 'Kopling'), false);
+  assert.equal(isServiceMatchingMotorType(catalog[2], 'Kopling'), true);
+  assert.equal(isServiceMatchingMotorType(catalog[3], 'Kopling'), true);
+
+  // Remapping cart when switching from Matic/Bebek -> Kopling swaps PRD100 -> PRD101
+  const initialCart = [
+    { id: 'PRD001', nama: 'Oli MPX2', harga: 55000, qty: 1, subtotal: 55000 },
+    { id: 'PRD100', nama: 'Servis Ringan (Matic/Bebek)', harga: 45000, qty: 1, subtotal: 45000 },
+    { id: 'PRD102', nama: 'Tambal Ban', harga: 20000, qty: 1, subtotal: 20000 },
+  ];
+  const remapped = remapCartServicesForMotorType(initialCart, catalog, 'Kopling');
+  assert.equal(remapped.swappedCount, 1);
+  assert.equal(remapped.unmatchedCount, 0);
+  assert.equal(remapped.nextCart[1].id, 'PRD101');
+  assert.equal(remapped.nextCart[1].harga, 60000);
+  assert.equal(remapped.nextCart[2].id, 'PRD102');
+});
+
+test('sortProductsByCategoryOrder and analytics sort Oli -> Busi -> Jasa Servis -> Sparepart -> Consumable Servis', () => {
+  const unsorted: ProductRow[] = [
+    ['PRD150', 'Carb Cleaner', 20000, 32000, 5, 'Consumables servis'],
+    ['PRD051', 'Kampas Rem', 35000, 50000, 8, 'Sparepart'],
+    ['PRD100', 'Servis Ringan (Matic/Bebek)', 0, 45000, 0, 'Jasa Servis'],
+    ['PRD025', 'Busi NGK', 18000, 28000, 12, 'Busi'],
+    ['PRD002', 'Oli SPX2', 50000, 65000, 4, 'Oli'],
+    ['PRD001', 'Oli MPX2', 42000, 55000, 10, 'Oli'],
+  ];
+
+  const sorted = sortProductsByCategoryOrder(unsorted);
+  assert.deepEqual(
+    sorted.map((r) => r[0]),
+    ['PRD001', 'PRD002', 'PRD025', 'PRD100', 'PRD051', 'PRD150']
+  );
+
+  const analytics = computeInventoryAnalytics(unsorted);
+  assert.deepEqual(
+    analytics.categories.map((c) => c.name),
+    ['Oli', 'Busi', 'Jasa Servis', 'Sparepart', 'Consumable Servis']
+  );
 });
 

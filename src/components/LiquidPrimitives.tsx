@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Sun, Moon, Package, Wrench, X } from 'lucide-react';
 import type { ThemeMode } from '../types/lbmm';
+import { isServiceCategory } from '../utils/business';
 import { getProductPhoto } from '../utils/format';
 
 export const LBMM_LOGO_URL =
@@ -114,7 +115,7 @@ export function ProductMedia({
           className="flex items-center justify-center w-full h-full bg-black/[0.04] dark:bg-white/[0.06] text-[var(--muted)]"
           aria-hidden="true"
         >
-          {category === 'Jasa Servis' ? (
+          {isServiceCategory(category) ? (
             <Wrench className="w-6 h-6" strokeWidth={1.75} />
           ) : (
             <Package className="w-6 h-6" strokeWidth={1.75} />

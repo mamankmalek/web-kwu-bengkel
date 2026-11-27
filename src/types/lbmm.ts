@@ -12,6 +12,7 @@ export type ViewMode = 'grid' | 'list';
 export type WoFilterStatus = 'all' | 'pending' | 'done';
 export type InventoryStatusFilter = 'all' | 'safe' | 'low' | 'empty' | 'service';
 export type ReportPreset = 'month' | 'today' | 'week' | 'last-month' | 'custom';
+export type MotorType = 'Matic/Bebek' | 'Kopling';
 
 /** [id, nama, modal, jual, stok, kategori, gambar] */
 export type ProductRow = [
@@ -42,6 +43,7 @@ export interface WorkOrder {
   nama: string;
   nopol: string;
   motor: string;
+  tipeMotor?: MotorType | string;
   keluhan: string;
   penerima: string;
   status?: string;

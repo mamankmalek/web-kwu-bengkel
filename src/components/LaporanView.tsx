@@ -13,6 +13,7 @@ import type {
   ReportPreset,
   WorkOrder,
 } from '../types/lbmm';
+import { isServiceCategory, normalizeProductCategory } from '../utils/business';
 import {
   axisMoney,
   buildReportCSV,
@@ -606,7 +607,9 @@ export function LaporanView({
                     <td data-label="Produk" className="font-semibold">
                       {row.name}
                     </td>
-                    <td data-label="Kategori">{row.category || '-'}</td>
+                    <td data-label="Kategori">
+                      {row.category ? normalizeProductCategory(row.category) : '-'}
+                    </td>
                     <td data-label="Qty" className="text-right tabular-nums">
                       {formatCount(row.qty)}
                     </td>
@@ -718,9 +721,9 @@ export function LaporanView({
                       <td data-label="Item" className="font-semibold">
                         {p[1]}
                       </td>
-                      <td data-label="Kategori">{p[5]}</td>
+                      <td data-label="Kategori">{normalizeProductCategory(p[5])}</td>
                       <td data-label="Stok" className="text-right tabular-nums">
-                        {p[5] === 'Jasa Servis' ? 'Jasa' : formatCount(p[4])}
+                        {isServiceCategory(p[5]) ? 'Jasa' : formatCount(p[4])}
                       </td>
                       <td data-label="Jual" className="text-right tabular-nums font-bold">
                         {rp(p[3])}

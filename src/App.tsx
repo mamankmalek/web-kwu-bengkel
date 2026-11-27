@@ -9,6 +9,7 @@ import type {
   CameraTarget,
   CartItem,
   LastTransactionData,
+  MotorType,
   PendingProof,
   ProductRow,
   ProofPayload,
@@ -26,6 +27,8 @@ import {
   addCartItem,
   computeCartSummary,
   computePresetRange,
+  formatMotorWithType,
+  remapCartServicesForMotorType,
   updateCartItemQty,
   validateReportData,
 } from './utils/business';
@@ -569,6 +572,31 @@ export default function App() {
     setCheckoutRequest(null);
   };
 
+  const handleSetActiveMotorType = (nextType: MotorType) => {
+    setActiveWO((prev) => ({
+      ...prev,
+      tipeMotor: nextType,
+      motor: formatMotorWithType(prev.motor, nextType),
+    }));
+    const { nextCart, swappedCount, unmatchedCount } = remapCartServicesForMotorType(
+      cart,
+      products,
+      nextType
+    );
+    if (swappedCount > 0) {
+      setCart(nextCart);
+      setCheckoutRequest(null);
+    }
+    if (unmatchedCount > 0) {
+      notify(
+        `Jenis motor diubah ke ${nextType}. Periksa item jasa di keranjang.`,
+        'warning'
+      );
+    } else if (swappedCount > 0) {
+      notify(`Harga jasa disesuaikan ke ${nextType}.`, 'success');
+    }
+  };
+
   const initiateCheckout = () => {
     if (activeWO.idWO === '-') {
       notify('Pilih WO terlebih dahulu.', 'warning');
@@ -898,6 +926,7 @@ export default function App() {
               onSetSendWa={setSendWa}
               onSetEmailInput={setEmailInput}
               onSetWaInput={setWaInput}
+              onSetActiveMotorType={handleSetActiveMotorType}
               onCheckout={initiateCheckout}
               onNotify={notify}
             />
@@ -974,6 +1003,7 @@ export default function App() {
 
       <ProductModal
         open={productModalOpen}
+        products={products}
         editingProduct={editingProduct}
         onClose={() => setProductModalOpen(false)}
         onSaved={() => loadProducts(true)}
